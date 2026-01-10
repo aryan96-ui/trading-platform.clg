@@ -1,0 +1,248 @@
+/* Premium Panel Styles - Add to style.css */
+
+.premium-panel {
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 2px solid rgba(240, 185, 11, 0.3);
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.premium-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(240, 185, 11, 0.2);
+}
+
+.premium-panel-header h3 {
+    font-size: 1.3rem;
+    color: var(--accent-yellow);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.premium-badge {
+    background: linear-gradient(135deg, #f0b90b 0%, #d4a00a 100%);
+    color: #131722;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.premium-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(240, 185, 11, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(240, 185, 11, 0.15);
+}
+
+.premium-section h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* AI Predictions */
+.prediction-card {
+    background: var(--bg-tertiary);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.prediction-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.prediction-row:last-of-type {
+    border-bottom: none;
+}
+
+.prediction-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.prediction-value.positive {
+    color: var(--accent-green);
+}
+
+.prediction-value.negative {
+    color: var(--accent-red);
+}
+
+.confidence-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confidence-meter {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-card);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-green) 0%, var(--accent-yellow) 100%);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* Technical Indicators */
+.indicators-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.indicator-box {
+    background: var(--bg-tertiary);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s;
+}
+
+.indicator-box:hover {
+    border-color: var(--accent-yellow);
+    transform: translateY(-2px);
+}
+
+.indicator-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.indicator-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.indicator-signal {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    font-weight: 600;
+}
+
+.indicator-signal.bullish {
+    background: rgba(0, 177, 93, 0.2);
+    color: var(--accent-green);
+}
+
+.indicator-signal.bearish {
+    background: rgba(255, 91, 90, 0.2);
+    color: var(--accent-red);
+}
+
+.indicator-signal.neutral {
+    background: rgba(139, 146, 181, 0.2);
+    color: var(--text-secondary);
+}
+
+/* Trading Signals */
+.signal-card {
+    background: var(--bg-tertiary);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.signal-action {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    background: rgba(139, 146, 181, 0.1);
+}
+
+.signal-action.buy {
+    color: var(--accent-green);
+    background: rgba(0, 177, 93, 0.15);
+}
+
+.signal-action.sell {
+    color: var(--accent-red);
+    background: rgba(255, 91, 90, 0.15);
+}
+
+.signal-strength {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.strength-bar {
+    flex: 1;
+    height: 10px;
+    background: var(--bg-card);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.strength-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.signal-recommendation {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    border-left: 3px solid var(--accent-blue);
+}
+
+@media (max-width: 768px) {
+    .indicators-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .premium-panel {
+        margin-top: 15px;
+    }
+}

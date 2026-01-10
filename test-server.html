@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .status {
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #26a69a;
+        }
+
+        .error {
+            background: #ef5350;
+        }
+
+        .info {
+            background: #42a5f5;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #2962ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #1e4edd;
+        }
+
+        pre {
+            background: #0f0f1e;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔧 Server Connection Test</h1>
+
+        <div id="status"></div>
+
+        <button onclick="testServer()">Test Server Connection</button>
+        <button onclick="testLogin()">Test Login API</button>
+        <button onclick="testMarketData()">Test Market Data API</button>
+
+        <h3>Response:</h3>
+        <pre id="response">Click a button to test the server...</pre>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const responseDiv = document.getElementById('response');
+
+        async function testServer() {
+            statusDiv.innerHTML = '<div class="info">Testing server at http://localhost:3000...</div>';
+            try {
+                const response = await fetch('http://localhost:3000');
+                const text = await response.text();
+                statusDiv.innerHTML = '<div class="success">✅ Server is running!</div>';
+                responseDiv.textContent = text;
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Server is NOT running! Error: ' + error.message + '</div>';
+                responseDiv.textContent = 'Error: ' + error.toString();
+            }
+        }
+
+        async function testLogin() {
+            statusDiv.innerHTML = '<div class="info">Testing login with demo credentials...</div>';
+            try {
+                const response = await fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'demo@college.com',
+                        password: 'password123'
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    statusDiv.innerHTML = '<div class="success">✅ Login successful!</div>';
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ Login failed: ' + data.message + '</div>';
+                }
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Connection failed! Server may not be running.</div>';
+                responseDiv.textContent = 'Error: ' + error.toString();
+            }
+        }
+
+        async function testMarketData() {
+            statusDiv.innerHTML = '<div class="info">Testing market data API...</div>';
+            try {
+                const response = await fetch('http://localhost:3000/api/market-data');
+                const data = await response.json();
+                statusDiv.innerHTML = '<div class="success">✅ Market data fetched successfully!</div>';
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Failed to fetch market data!</div>';
+                responseDiv.textContent = 'Error: ' + error.toString();
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = () => {
+            setTimeout(testServer, 500);
+        };
+    </script>
+</body>
+
+</html>

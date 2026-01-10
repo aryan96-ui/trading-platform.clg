@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ProTrader</title>
+    <link rel="stylesheet" href="css/landing.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-glow {
+            position: absolute;
+            top: -300px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1000px;
+            height: 1000px;
+            background: radial-gradient(circle, var(--glow-blue) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .auth-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-logo {
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .auth-header {
+            margin-bottom: 40px;
+        }
+
+        .auth-title {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .auth-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: var(--bg-elevated);
+        }
+
+        .form-submit {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .form-submit:hover {
+            background: #1e4edd;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(41, 98, 255, 0.4);
+        }
+
+        .form-switch {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .form-switch a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .demo-credentials {
+            margin-top: 32px;
+            padding: 20px;
+            background: rgba(41, 98, 255, 0.1);
+            border: 1px solid rgba(41, 98, 255, 0.3);
+            border-radius: 12px;
+        }
+
+        .demo-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 12px;
+        }
+
+        .demo-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .demo-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .auth-right {
+            flex: 1;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+        }
+
+        .auth-visual {
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .auth-visual-title {
+            font-size: 48px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .auth-visual-desc {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 40px;
+        }
+
+        .auth-features {
+            display: grid;
+            gap: 20px;
+            text-align: left;
+        }
+
+        .auth-feature {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-feature-icon {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .auth-feature-text {
+            flex: 1;
+        }
+
+        .auth-feature-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .auth-feature-desc {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .message.success {
+            background: rgba(38, 166, 154, 0.2);
+            color: var(--accent-green);
+            border: 1px solid rgba(38, 166, 154, 0.3);
+        }
+
+        .message.error {
+            background: rgba(239, 83, 80, 0.2);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 83, 80, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+            .auth-right {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .auth-left {
+                padding: 40px 24px;
+            }
+
+            .auth-logo {
+                left: 24px;
+            }
+
+            .auth-title {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-page">
+        <div class="auth-glow"></div>
+
+        <div class="auth-left">
+            <a href="index.html" class="auth-logo">
+                <div class="logo-icon">📈</div>
+                <span class="logo-text">Pro<strong>Trader</strong></span>
+            </a>
+
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h1 class="auth-title" id="form-title">Welcome back</h1>
+                    <p class="auth-subtitle" id="form-subtitle">Sign in to continue trading</p>
+                </div>
+
+                <div id="message-container"></div>
+
+                <form id="auth-form">
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="password" class="form-input" placeholder="Enter your password"
+                            required>
+                    </div>
+
+                    <button type="submit" class="form-submit" id="submit-btn">Sign In</button>
+                </form>
+
+                <p class="form-switch" id="switch-text">
+                    Don't have an account? <a href="#" id="switch-link">Create one</a>
+                </p>
+
+                <div class="demo-credentials">
+                    <div class="demo-title">Demo Credentials</div>
+                    <div class="demo-item">
+                        <span>Email:</span>
+                        <span class="demo-value">demo@college.com</span>
+                    </div>
+                    <div class="demo-item">
+                        <span>Password:</span>
+                        <span class="demo-value">password123</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-right">
+            <div class="auth-visual">
+                <h2 class="auth-visual-title">Trade with Confidence</h2>
+                <p class="auth-visual-desc">Join thousands of traders using ProTrader's advanced platform</p>
+
+                <div class="auth-features">
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">⚡</div>
+                        <div class="auth-feature-text">
+                            <div class="auth-feature-title">Real-Time Data</div>
+                            <div class="auth-feature-desc">Live market updates every second</div>
+                        </div>
+                    </div>
+
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">🔒</div>
+                        <div class="auth-feature-text">
+                            <div class="auth-feature-title">Secure Trading</div>
+                            <div class="auth-feature-desc">Bank-level encryption & security</div>
+                        </div>
+                    </div>
+
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">📊</div>
+                        <div class="auth-feature-text">
+                            <div class="auth-feature-title">Advanced Analytics</div>
+                            <div class="auth-feature-desc">Professional charting & indicators</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+
+</html>

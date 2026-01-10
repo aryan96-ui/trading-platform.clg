@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - ProTrader Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .success-card {
+            background: rgba(26, 31, 58, 0.8);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 24px;
+            padding: 60px 40px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            animation: checkmark 0.8s ease-out;
+        }
+
+        @keyframes checkmark {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #8b92b5;
+            margin-bottom: 40px;
+        }
+
+        .plan-details {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .plan-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .plan-info:last-child {
+            border-bottom: none;
+        }
+
+        .plan-info span:first-child {
+            color: #8b92b5;
+        }
+
+        .plan-info span:last-child {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .features-unlocked {
+            margin: 40px 0;
+        }
+
+        .features-unlocked h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 12px;
+            margin: 10px 0;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #8b92b5;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .email-confirmation {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .email-confirmation p {
+            color: #8b92b5;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .processing {
+            color: #8b92b5;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .success-card {
+                padding: 40px 25px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="success-card">
+            <div class="success-icon">✓</div>
+            <h1>Payment Successful!</h1>
+            <p class="subtitle">Welcome to ProTrader Premium</p>
+
+            <div class="plan-details">
+                <div class="plan-info">
+                    <span>Plan:</span>
+                    <span id="planName">Loading...</span>
+                </div>
+                <div class="plan-info">
+                    <span>Amount Paid:</span>
+                    <span id="amount">Loading...</span>
+                </div>
+                <div class="plan-info">
+                    <span>Transaction ID:</span>
+                    <span id="transactionId">Loading...</span>
+                </div>
+                <div class="plan-info">
+                    <span>Status:</span>
+                    <span style="color: #22c55e;">✓ Active</span>
+                </div>
+            </div>
+
+            <div class="features-unlocked">
+                <h3>🎉 Features Unlocked</h3>
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <span>AI-Powered Price Predictions</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <span>10+ Advanced Technical Indicators</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <span>Strategy Backtesting Engine</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <span>Custom Price Alerts</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <span>Historical Data & Analytics</span>
+                </div>
+            </div>
+
+            <div class="processing" id="processingMessage">
+                <div class="loader"></div>
+                <p style="margin-top: 10px;">Activating your premium features...</p>
+            </div>
+
+            <div class="cta-buttons" id="ctaButtons" style="display: none;">
+                <a href="dashboard-standalone.html" class="btn btn-primary">Go to Dashboard</a>
+                <a href="pricing.html" class="btn btn-secondary">View Premium Features</a>
+            </div>
+
+            <div class="cta-buttons" id="ctaButtons2" style="display: none; margin-top: 15px;">
+                <a href="portfolio.html" class="btn btn-secondary">My Portfolio</a>
+                <a href="order-history.html" class="btn btn-secondary">Trade History</a>
+            </div>
+
+            <div class="email-confirmation">
+                <p>📧 A confirmation email has been sent to your registered email address with your subscription details
+                    and invoice.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const plan = urlParams.get('plan') || 'monthly';
+        const amount = urlParams.get('amount') || '499';
+        const paymentId = urlParams.get('payment_id') || 'pay_' + Date.now();
+
+        // Plan names mapping
+        const planNames = {
+            'monthly': 'Monthly Premium',
+            '6month': '6-Month Premium',
+            'yearly': 'Yearly Premium'
+        };
+
+        // Update UI with payment details
+        document.getElementById('planName').textContent = planNames[plan] || 'Premium Plan';
+        document.getElementById('amount').textContent = '₹' + Number(amount).toLocaleString('en-IN');
+        document.getElementById('transactionId').textContent = paymentId.substring(0, 20) + '...';
+
+        // Activate premium features
+        async function activatePremium() {
+            const userEmail = localStorage.getItem('userEmail') || 'demo@college.com';
+
+            try {
+                console.log('Activating premium for:', userEmail);
+
+                // Wait 2 seconds to simulate processing
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Hide processing message
+                document.getElementById('processingMessage').style.display = 'none';
+
+                // Show action buttons
+                document.getElementById('ctaButtons').style.display = 'flex';
+                document.getElementById('ctaButtons2').style.display = 'flex';
+
+                // Store premium status in localStorage
+                localStorage.setItem('isPremium', 'true');
+                localStorage.setItem('premiumPlan', plan);
+                localStorage.setItem('premiumActivatedAt', new Date().toISOString());
+                localStorage.setItem('razorpayPaymentId', paymentId);
+
+                // IMPORTANT: Update the user object in localStorage
+                const savedUser = localStorage.getItem('user');
+                if (savedUser) {
+                    const userObj = JSON.parse(savedUser);
+                    userObj.isPremium = true;
+                    userObj.premiumPlan = plan;
+                    userObj.tierLevel = 'pro';
+                    userObj.plan = 'PRO';
+                    localStorage.setItem('user', JSON.stringify(userObj));
+                    console.log('✅ User object updated with premium status:', userObj);
+                } else {
+                    // Create new user object with premium
+                    const newUser = {
+                        email: userEmail,
+                        balance: 100000,
+                        portfolio: {},
+                        isPremium: true,
+                        premiumPlan: plan,
+                        tierLevel: 'pro',
+                        plan: 'PRO'
+                    };
+                    localStorage.setItem('user', JSON.stringify(newUser));
+                    console.log('✅ New premium user object created:', newUser);
+                }
+
+                console.log('✅ Premium activated successfully via Razorpay!');
+            } catch (error) {
+                console.error('Error activating premium:', error);
+                document.getElementById('processingMessage').innerHTML = `
+                    <p style="color: #ef4444;">Error activating premium. Please contact support.</p>
+                `;
+            }
+        }
+
+        // Activate on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            activatePremium();
+
+            // Add confetti effect
+            createConfetti();
+        });
+
+        // Simple confetti effect
+        function createConfetti() {
+            const colors = ['#667eea', '#764ba2', '#22c55e', '#f093fb', '#f5576c'];
+            const confettiCount = 50;
+
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.width = '10px';
+                    confetti.style.height = '10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.top = '-10px';
+                    confetti.style.opacity = '1';
+                    confetti.style.zIndex = '9999';
+                    confetti.style.borderRadius = '50%';
+                    confetti.style.animation = `fall ${2 + Math.random() * 2}s linear`;
+
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => confetti.remove(), 4000);
+                }, i * 30);
+            }
+        }
+
+        // Add CSS animation for confetti
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    top: 100vh;
+                    opacity: 0;
+                    transform: translateX(${Math.random() * 200 - 100}px) rotate(${Math.random() * 360}deg);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+
+</html>

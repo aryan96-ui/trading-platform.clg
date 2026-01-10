@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProTrader Premium - Unlock Advanced Trading Features</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0 60px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #8b92b5;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* Pricing Cards */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .pricing-card {
+            background: rgba(26, 31, 58, 0.6);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            padding: 40px 30px;
+            position: relative;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+        }
+
+        .pricing-card.popular {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .plan-price span {
+            font-size: 1.2rem;
+            color: #8b92b5;
+            font-weight: 400;
+        }
+
+        .plan-description {
+            color: #8b92b5;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .savings {
+            display: inline-block;
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 30px 0;
+        }
+
+        .features-list li {
+            padding: 12px 0;
+            color: #c4cad8;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .features-list li::before {
+            content: "✓";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .cta-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Features Comparison */
+        .comparison-section {
+            margin: 80px 0;
+            padding: 60px 40px;
+            background: rgba(26, 31, 58, 0.4);
+            border-radius: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .comparison-section h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-table th {
+            background: rgba(102, 126, 234, 0.1);
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .comparison-table td {
+            color: #c4cad8;
+        }
+
+        .check-icon {
+            color: #22c55e;
+            font-size: 1.5rem;
+        }
+
+        .cross-icon {
+            color: #ef4444;
+            font-size: 1.2rem;
+        }
+
+        /* Payment Gateway Info */
+        .payment-info {
+            text-align: center;
+            margin: 60px 0;
+            padding: 40px;
+            background: rgba(26, 31, 58, 0.4);
+            border-radius: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .payment-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .payment-methods {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .payment-method {
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            font-weight: 600;
+            color: #8b92b5;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin: 30px 0;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+            transform: translateX(-5px);
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(26, 31, 58, 0.95);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 300px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            border-color: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-section {
+                padding: 30px 20px;
+            }
+
+            .comparison-table {
+                font-size: 0.85rem;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 12px 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Home</a>
+
+        <div class="header">
+            <div class="badge">🚀 Limited Time Offer - 20% Off Annual Plans</div>
+            <h1>Choose Your Trading Edge</h1>
+            <p>Unlock powerful AI predictions, advanced indicators, and backtesting tools to trade like a pro</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- Monthly Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Monthly</div>
+                <div class="plan-price">₹499<span>/month</span></div>
+                <div class="plan-description">Perfect for trying out premium features</div>
+
+                <ul class="features-list">
+                    <li>AI-Powered Price Predictions</li>
+                    <li>10+ Technical Indicators</li>
+                    <li>Strategy Backtesting</li>
+                    <li>Custom Price Alerts</li>
+                    <li>Portfolio CSV Export</li>
+                    <li>Historical Data Access</li>
+                    <li>Priority Email Support</li>
+                </ul>
+
+                <button class="cta-button" onclick="selectPlan('monthly', 499)">Start Monthly Plan</button>
+            </div>
+
+            <!-- 6-Month Plan -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">🔥 Most Popular</div>
+                <div class="plan-name">6 Months</div>
+                <div class="plan-price">₹2,499<span>/6 months</span></div>
+                <div class="savings">Save ₹495 (17% OFF)</div>
+                <div class="plan-description">Best value for serious traders</div>
+
+                <ul class="features-list">
+                    <li>Everything in Monthly</li>
+                    <li>Advanced Fibonacci Tools</li>
+                    <li>Ichimoku Cloud Indicators</li>
+                    <li>Multiple Strategy Testing</li>
+                    <li>Volume Profile Analysis</li>
+                    <li>WhatsApp Alerts (Beta)</li>
+                    <li>Priority Support + Calls</li>
+                </ul>
+
+                <button class="cta-button" onclick="selectPlan('6month', 2499)">Get 6-Month Plan</button>
+            </div>
+
+            <!-- Yearly Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Yearly</div>
+                <div class="plan-price">₹4,799<span>/year</span></div>
+                <div class="savings">Save ₹1,189 (20% OFF)</div>
+                <div class="plan-description">Maximum savings for long-term traders</div>
+
+                <ul class="features-list">
+                    <li>Everything in 6-Month Plan</li>
+                    <li>AI Pattern Recognition</li>
+                    <li>Real-time WebSocket Data</li>
+                    <li>Advanced Order Types</li>
+                    <li>API Access for Automation</li>
+                    <li>Dedicated Account Manager</li>
+                    <li>24/7 Priority Support</li>
+                </ul>
+
+                <button class="cta-button" onclick="selectPlan('yearly', 4799)">Get Yearly Plan</button>
+            </div>
+        </div>
+
+        <!-- Payment Gateway Information -->
+        <div class="payment-info">
+            <h3>🔒 Secure Payment Gateway</h3>
+            <p style="color: #8b92b5; margin: 15px 0;">Powered by Razorpay - India's trusted payment gateway</p>
+
+            <div class="payment-methods">
+                <div class="payment-method">💳 Credit/Debit Cards</div>
+                <div class="payment-method">🏦 UPI</div>
+                <div class="payment-method">🌐 Net Banking</div>
+                <div class="payment-method">💰 Wallets</div>
+            </div>
+
+            <p style="color: #8b92b5; margin-top: 25px; font-size: 0.9rem;">
+                ✓ SSL Encrypted • ✓ PCI DSS Compliant • ✓ Cancel Anytime
+            </p>
+        </div>
+
+        <!-- Feature Comparison -->
+        <div class="comparison-section">
+            <h2>Feature Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th style="text-align: center;">Free</th>
+                        <th style="text-align: center;">Premium</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Basic Trading</td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Real-time Market Data</td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>AI Price Predictions</td>
+                        <td style="text-align: center;"><span class="cross-icon">✗</span></td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Advanced Technical Indicators (10+)</td>
+                        <td style="text-align: center;"><span class="cross-icon">✗</span></td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Strategy Backtesting</td>
+                        <td style="text-align: center;"><span class="cross-icon">✗</span></td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Custom Price Alerts</td>
+                        <td style="text-align: center;"><span class="cross-icon">✗</span></td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Historical OHLC Data</td>
+                        <td style="text-align: center;"><span class="cross-icon">✗</span></td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Portfolio Export (CSV)</td>
+                        <td style="text-align: center;"><span class="cross-icon">✗</span></td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Priority Support</td>
+                        <td style="text-align: center;"><span class="cross-icon">✗</span></td>
+                        <td style="text-align: center;"><span class="check-icon">✓</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div id="notificationMessage"></div>
+    </div>
+
+    <!-- Razorpay Checkout Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <script>
+        // Get user email from localStorage
+        const userEmail = localStorage.getItem('userEmail') || 'demo@college.com';
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const messageEl = document.getElementById('notificationMessage');
+
+            messageEl.textContent = message;
+            notification.className = 'notification show' + (type === 'error' ? ' error' : '');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        async function selectPlan(planType, amount) {
+            try {
+                showNotification('Initializing payment...', 'info');
+
+                // Create order on backend
+                const orderResponse = await fetch('/api/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: amount * 100, // Convert to paise (₹499 → 49900 paise)
+                        currency: 'INR',
+                        receipt: `order_${planType}_${Date.now()}`
+                    })
+                });
+
+                const orderData = await orderResponse.json();
+
+                if (orderData.error) {
+                    showNotification(orderData.error, 'error');
+                    // Demo fallback
+                    setTimeout(() => {
+                        showNotification('Demo Mode: Simulating payment...', 'info');
+                        setTimeout(() => {
+                            window.location.href = 'payment-success.html?plan=' + planType + '&amount=' + amount;
+                        }, 1500);
+                    }, 2000);
+                    return;
+                }
+
+                // Open Razorpay checkout
+                const options = {
+                    key: 'rzp_test_S0aRTlHDRju4RM', // Your Razorpay Key ID
+                    amount: orderData.amount,
+                    currency: orderData.currency,
+                    name: 'ProTrader Premium',
+                    description: getPlanDescription(planType),
+                    order_id: orderData.id,
+                    prefill: {
+                        email: userEmail,
+                        contact: ''
+                    },
+                    theme: {
+                        color: '#667eea'
+                    },
+                    handler: async function (response) {
+                        // Payment successful - verify on backend
+                        showNotification('Verifying payment...', 'info');
+
+                        try {
+                            const verifyResponse = await fetch('/api/verify-payment', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    email: userEmail,
+                                    amount: amount
+                                })
+                            });
+
+                            const verifyData = await verifyResponse.json();
+
+                            if (verifyData.success) {
+                                // Redirect to success page
+                                window.location.href = `payment-success.html?plan=${planType}&amount=${amount}&payment_id=${response.razorpay_payment_id}`;
+                            } else {
+                                showNotification('Payment verification failed. Please contact support.', 'error');
+                            }
+                        } catch (error) {
+                            console.error('Verification error:', error);
+                            // Still redirect to success for demo
+                            window.location.href = `payment-success.html?plan=${planType}&amount=${amount}&payment_id=${response.razorpay_payment_id}`;
+                        }
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            showNotification('Payment cancelled', 'error');
+                        }
+                    }
+                };
+
+                const razorpay = new Razorpay(options);
+                razorpay.open();
+
+            } catch (error) {
+                console.error('Payment error:', error);
+                showNotification('Error: ' + error.message, 'error');
+
+                // Fallback for demo
+                setTimeout(() => {
+                    showNotification('Demo Mode: Simulating payment...', 'info');
+                    setTimeout(() => {
+                        window.location.href = 'payment-success.html?plan=' + planType + '&amount=' + amount;
+                    }, 1500);
+                }, 2000);
+            }
+        }
+
+        function getPlanDescription(planType) {
+            const descriptions = {
+                'monthly': 'Monthly Premium Subscription',
+                '6month': '6-Month Premium Subscription',
+                'yearly': 'Yearly Premium Subscription'
+            };
+            return descriptions[planType] || 'Premium Subscription';
+        }
+
+        // Check if user is already premium
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // You can add a check here to see if user is already premium
+                // and show a different message
+            } catch (error) {
+                console.log('Error checking premium status:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>
