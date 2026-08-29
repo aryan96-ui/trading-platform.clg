@@ -505,11 +505,11 @@ notificationStyles.textContent = `
         position: fixed;
         top: 80px;
         right: 20px;
-        background: var(--bg-secondary);
+        background: var(--bg-surface);
         color: white;
         padding: 15px 20px;
         border-radius: 8px;
-        border-left: 4px solid var(--accent-green);
+        border-left: 4px solid var(--green);
         z-index: 3000;
         animation: slideIn 0.3s ease;
         display: flex;
@@ -520,7 +520,7 @@ notificationStyles.textContent = `
     }
     
     .notification.error {
-        border-left-color: var(--accent-red);
+        border-left-color: var(--red);
     }
     
     .notification i {

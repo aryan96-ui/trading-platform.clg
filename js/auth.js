@@ -15,7 +15,7 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
     const endpoint = isRegister ? '/api/register' : '/api/login';
 
     try {
-        const response = await fetch(`http://localhost:3000${endpoint}`, {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -31,12 +31,9 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
                 }
                 setTimeout(() => window.location.href = 'login.html', 2000);
             } else {
-                // Save user data to localStorage
                 localStorage.setItem('userEmail', data.user.email);
                 localStorage.setItem('userBalance', data.user.balance);
                 localStorage.setItem('user', JSON.stringify(data.user));
-
-                // Redirect to trading dashboard
                 window.location.href = 'dashboard-standalone.html';
             }
         } else {

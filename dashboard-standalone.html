@@ -22,7 +22,7 @@
             </div>
             <div class="nav-items">
                 <div class="market-status">
-                    <i class="fas fa-circle" style="color: var(--accent-green); font-size: 0.5rem;"></i>
+                    <i class="fas fa-circle" style="color: var(--green); font-size: 0.5rem;"></i>
                     <span>Market Live</span>
                 </div>
                 <span class="user-info">
@@ -264,6 +264,37 @@
                     </div>
                 </div>
 
+                <!-- Greeks Display -->
+                <div class="premium-section">
+                    <h4><i class="fas fa-calculator"></i> Option Greeks</h4>
+                    <div class="greeks-values" id="greeks-values">
+                        <div class="greek-row">
+                            <span class="greek-label">Delta (Δ)</span>
+                            <span class="greek-value">--</span>
+                        </div>
+                        <div class="greek-row">
+                            <span class="greek-label">Gamma (Γ)</span>
+                            <span class="greek-value">--</span>
+                        </div>
+                        <div class="greek-row">
+                            <span class="greek-label">Theta (Θ)</span>
+                            <span class="greek-value">--</span>
+                        </div>
+                        <div class="greek-row">
+                            <span class="greek-label">Vega (ν)</span>
+                            <span class="greek-value">--</span>
+                        </div>
+                        <div class="greek-row">
+                            <span class="greek-label">IV</span>
+                            <span class="greek-value">--</span>
+                        </div>
+                        <div class="greek-row">
+                            <span class="greek-label">DTE</span>
+                            <span class="greek-value">--</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Trading Signals -->
                 <div class="premium-section">
                     <h4><i class="fas fa-signal"></i> AI Trading Signal</h4>
@@ -284,6 +315,60 @@
             </div>
         </div>
     </div>
+
+
+        <!-- Right Sidebar - Options Chain & Account -->
+        <div class="right-sidebar">
+            <!-- Account Section -->
+            <div class="account-section">
+                <div class="account-header">Account</div>
+                <div class="balance-display-card">
+                    <div class="balance-label">Available Balance</div>
+                    <div class="balance-amount" id="user-balance">₹1,00,000</div>
+                </div>
+                <div class="account-actions">
+                    <button class="btn-deposit" onclick="showPaymentModal()">Deposit</button>
+                    <button class="btn-logout" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <!-- Options Chain -->
+            <div class="options-chain">
+                <div class="chain-header">
+                    <h3>Options Chain</h3>
+                    <div class="chain-tabs">
+                        <button class="chain-tab active" onclick="this.parentElement.querySelectorAll('.chain-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active')">CE</button>
+                        <button class="chain-tab" onclick="this.parentElement.querySelectorAll('.chain-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active')">PE</button>
+                    </div>
+                </div>
+                <table class="options-table" id="options-table">
+                    <thead>
+                        <tr>
+                            <th>OI</th>
+                            <th>LTP</th>
+                            <th>Strike</th>
+                            <th>LTP</th>
+                            <th>OI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="options-tbody">
+                        <!-- Dynamic options chain -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Trade History -->
+            <div class="trade-history">
+                <div class="history-header">
+                    <span class="history-title">Recent Trades</span>
+                </div>
+                <div class="history-table" id="history-container">
+                    <div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px;">
+                        No trades yet. Start trading!
+                    </div>
+                </div>
+            </div>
+        </div>
 
     <!-- Market Data Ticker -->
     <div class="market-ticker">

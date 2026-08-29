@@ -52,13 +52,13 @@
         <!-- Main Content -->
         <div class="main-content">
             <div
-                style="background: var(--bg-secondary); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color);">
+                style="background: var(--bg-surface); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
                 <h2 style="color:var(--text-primary);margin-bottom:20px;display:flex;align-items:center;gap:10px;">
                     <i class="fas fa-history"></i> Complete Trade History
                 </h2>
                 <table id="history-table" style="width:100%;border-collapse:collapse;">
                     <thead>
-                        <tr style="background:var(--bg-tertiary);color:var(--text-primary);">
+                        <tr style="background:var(--bg-elevated);color:var(--text-primary);">
                             <th style="padding:12px;text-align:left;">Date / Time</th>
                             <th style="padding:12px;text-align:left;">Symbol</th>
                             <th style="padding:12px;text-align:left;">Type</th>
@@ -111,8 +111,8 @@
                     const tbody = document.getElementById('history-body');
                     d.history.slice().reverse().forEach(t => {
                         const tr = document.createElement('tr');
-                        tr.style.borderBottom = '1px solid var(--border-color)';
-                        const typeColor = t.type === 'buy' ? 'var(--accent-green)' : 'var(--accent-red)';
+                        tr.style.borderBottom = '1px solid var(--border)';
+                        const typeColor = t.type === 'buy' ? 'var(--green)' : 'var(--red)';
                         tr.innerHTML = `
                             <td style="padding:12px;">${new Date(t.timestamp).toLocaleString()}</td>
                             <td style="padding:12px;font-weight:600;">${t.symbol}</td>

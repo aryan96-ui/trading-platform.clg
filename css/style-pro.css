@@ -30,7 +30,7 @@ body {
 /* Top Navigation */
 .top-nav {
     background: var(--bg-panel);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
     padding: 0 24px;
     display: flex;
     align-items: center;
@@ -50,7 +50,7 @@ body {
 .logo-icon {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    background: linear-gradient(135deg, var(--blue), var(--purple));
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -94,7 +94,7 @@ body {
 .btn-secondary {
     background: transparent;
     color: var(--text-secondary);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
@@ -103,7 +103,7 @@ body {
 }
 
 .btn-primary {
-    background: var(--accent-blue);
+    background: var(--blue);
     color: white;
 }
 
@@ -121,7 +121,7 @@ body {
 .left-sidebar {
     width: 280px;
     background: var(--bg-panel);
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -129,7 +129,7 @@ body {
 
 .sidebar-section {
     padding: 16px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
 }
 
 .section-header {
@@ -175,7 +175,7 @@ body {
 /* Watchlist */
 .watchlist-item {
     padding: 12px;
-    background: var(--bg-card);
+    background: var(--bg-elevated);
     border-radius: 8px;
     margin-bottom: 8px;
     display: flex;
@@ -191,7 +191,7 @@ body {
 }
 
 .watchlist-item.active {
-    border-left-color: var(--accent-blue);
+    border-left-color: var(--blue);
     background: var(--hover-bg);
 }
 
@@ -202,15 +202,15 @@ body {
 }
 
 .symbol-color.green {
-    background: var(--accent-green);
+    background: var(--green);
 }
 
 .symbol-color.red {
-    background: var(--accent-red);
+    background: var(--red);
 }
 
 .symbol-color.blue {
-    background: var(--accent-blue);
+    background: var(--blue);
 }
 
 .watchlist-info {
@@ -238,17 +238,17 @@ body {
 }
 
 .change.positive {
-    color: var(--accent-green);
+    color: var(--green);
 }
 
 .change.negative {
-    color: var(--accent-red);
+    color: var(--red);
 }
 
 /* Alerts */
 .alert-item {
     padding: 10px;
-    background: var(--bg-card);
+    background: var(--bg-elevated);
     border-radius: 6px;
     margin-bottom: 8px;
     display: flex;
@@ -274,7 +274,7 @@ body {
 
 .alert-icon.info {
     background: rgba(41, 98, 255, 0.2);
-    color: var(--accent-blue);
+    color: var(--blue);
 }
 
 .alert-content {
@@ -296,7 +296,7 @@ body {
 /* Mini Chart */
 .mini-chart-container {
     height: 200px;
-    background: var(--bg-card);
+    background: var(--bg-elevated);
     border-radius: 8px;
     padding: 12px;
 }
@@ -312,7 +312,7 @@ body {
 .chart-header {
     padding: 16px 20px;
     background: var(--bg-panel);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -336,12 +336,12 @@ body {
     padding: 4px 10px;
     border-radius: 4px;
     background: rgba(38, 166, 154, 0.15);
-    color: var(--accent-green);
+    color: var(--green);
 }
 
 .symbol-change.negative {
     background: rgba(239, 83, 80, 0.15);
-    color: var(--accent-red);
+    color: var(--red);
 }
 
 .chart-tools {
@@ -360,7 +360,7 @@ body {
 .chart-sidebar {
     width: 48px;
     background: var(--bg-panel);
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -386,7 +386,7 @@ body {
 .chart-tool:hover,
 .chart-tool.active {
     background: var(--hover-bg);
-    color: var(--accent-blue);
+    color: var(--blue);
 }
 
 .chart-main {
@@ -407,7 +407,7 @@ body {
 
 .chart-footer {
     background: var(--bg-panel);
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border);
     padding: 12px 20px;
     display: flex;
     align-items: center;
@@ -436,18 +436,18 @@ body {
 }
 
 .ticker-change.positive {
-    color: var(--accent-green);
+    color: var(--green);
 }
 
 .ticker-change.negative {
-    color: var(--accent-red);
+    color: var(--red);
 }
 
 /* Right Sidebar */
 .right-sidebar {
     width: 320px;
     background: var(--bg-panel);
-    border-left: 1px solid var(--border-color);
+    border-left: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -456,7 +456,7 @@ body {
 /* Account Section */
 .account-section {
     padding: 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
 }
 
 .account-header {
@@ -491,20 +491,20 @@ body {
 
 .btn-deposit {
     flex: 1;
-    background: var(--accent-blue);
+    background: var(--blue);
     color: white;
 }
 
 .btn-logout {
     flex: 1;
-    background: var(--bg-card);
+    background: var(--bg-elevated);
     color: var(--text-secondary);
 }
 
 /* Trading Panel */
 .trading-panel {
     padding: 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
 }
 
 .panel-header {
@@ -533,8 +533,8 @@ body {
 .input-field {
     width: 100%;
     padding: 12px 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text-primary);
     font-size: 14px;
@@ -544,7 +544,7 @@ body {
 }
 
 .input-field:focus {
-    border-color: var(--accent-blue);
+    border-color: var(--blue);
     background: var(--bg-dark);
 }
 
@@ -564,7 +564,7 @@ select.input-field {
 }
 
 .btn-buy {
-    background: var(--accent-green);
+    background: var(--green);
     color: white;
     padding: 14px;
     font-size: 15px;
@@ -576,7 +576,7 @@ select.input-field {
 }
 
 .btn-sell {
-    background: var(--accent-red);
+    background: var(--red);
     color: white;
     padding: 14px;
     font-size: 15px;
@@ -618,7 +618,7 @@ select.input-field {
     grid-template-columns: 60px 1fr 80px;
     gap: 12px;
     padding: 12px 0;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
     font-size: 13px;
 }
 
@@ -632,11 +632,11 @@ select.input-field {
 }
 
 .type-buy {
-    color: var(--accent-green);
+    color: var(--green);
 }
 
 .type-sell {
-    color: var(--accent-red);
+    color: var(--red);
 }
 
 .history-asset {
@@ -660,7 +660,7 @@ select.input-field {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--border-color);
+    background: var(--border);
     border-radius: 10px;
 }
 
@@ -718,7 +718,7 @@ select.input-field {
     bottom: 24px;
     right: 24px;
     background: var(--bg-panel);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 16px 20px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
@@ -739,18 +739,18 @@ select.input-field {
 }
 
 .notification.success {
-    border-left: 4px solid var(--accent-green);
+    border-left: 4px solid var(--green);
 }
 
 .notification.error {
-    border-left: 4px solid var(--accent-red);
+    border-left: 4px solid var(--red);
 }
 
 /* Time Interval Selector */
 .time-intervals {
     display: flex;
     gap: 4px;
-    background: var(--bg-card);
+    background: var(--bg-elevated);
     padding: 4px;
     border-radius: 6px;
 }
@@ -773,6 +773,6 @@ select.input-field {
 }
 
 .interval-btn.active {
-    background: var(--accent-blue);
+    background: var(--blue);
     color: white;
 }

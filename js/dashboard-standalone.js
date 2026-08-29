@@ -282,7 +282,8 @@ class TradingPlatform {
     refreshMarketData() {
         // Slightly update prices to simulate live market
         if (this.marketData) {
-            Object.keys(this.marketData).forEach(assetType => {
+            ['stocks', 'crypto', 'forex', 'commodities'].forEach(assetType => {
+                if (!this.marketData[assetType]) return;
                 Object.keys(this.marketData[assetType]).forEach(symbol => {
                     const data = this.marketData[assetType][symbol];
                     // Small random price movement (±0.5%)
@@ -300,6 +301,8 @@ class TradingPlatform {
         this.updateLastUpdated();
         this.updateChart();
         this.updatePremiumData(); // Update premium analytics
+        this.generateOptionsChain(); // Update options chain
+        this.updateGreeksDisplay(); // Update Greeks
         console.log('✅ Market data refreshed:', new Date().toLocaleTimeString());
     }
 
@@ -581,8 +584,8 @@ class TradingPlatform {
 
         // Update border color based on trend
         const trend = data.prices[data.prices.length - 1] > data.prices[0];
-        this.chart.data.datasets[0].borderColor = trend ? '#00b15d' : '#ff5b5a';
-        this.chart.data.datasets[0].backgroundColor = trend ? 'rgba(0, 177, 93, 0.1)' : 'rgba(255, 91, 90, 0.1)';
+        this.chart.data.datasets[0].borderColor = trend ? '#00c853' : '#ff3d3d';
+        this.chart.data.datasets[0].backgroundColor = trend ? 'rgba(0, 200, 83, 0.1)' : 'rgba(255, 61, 61, 0.1)';
 
         this.chart.update('none'); // Update without animation
     }
@@ -605,14 +608,14 @@ class TradingPlatform {
                 datasets: [{
                     label: 'Price',
                     data: data.prices,
-                    borderColor: '#00b15d',
-                    backgroundColor: 'rgba(0, 177, 93, 0.1)',
+                    borderColor: '#00c853',
+                    backgroundColor: 'rgba(0, 200, 83, 0.1)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.4,
                     pointRadius: 0,
                     pointHoverRadius: 5,
-                    pointHoverBackgroundColor: '#00b15d',
+                    pointHoverBackgroundColor: '#00c853',
                     pointHoverBorderColor: '#ffffff',
                     pointHoverBorderWidth: 2
                 }]
@@ -626,9 +629,9 @@ class TradingPlatform {
                         mode: 'index',
                         intersect: false,
                         backgroundColor: 'rgba(30, 34, 45, 0.95)',
-                        titleColor: '#b7bdc6',
+                        titleColor: '#8b95a5',
                         bodyColor: '#ffffff',
-                        borderColor: '#36404a',
+                        borderColor: '#1e293b',
                         borderWidth: 1,
                         padding: 12,
                         displayColors: false,
@@ -642,11 +645,11 @@ class TradingPlatform {
                 scales: {
                     x: {
                         grid: {
-                            color: '#2a2e39',
+                            color: '#1e293b',
                             drawBorder: false
                         },
                         ticks: {
-                            color: '#b7bdc6',
+                            color: '#8b95a5',
                             maxTicksLimit: 10,
                             font: {
                                 size: 11
@@ -655,11 +658,11 @@ class TradingPlatform {
                     },
                     y: {
                         grid: {
-                            color: '#2a2e39',
+                            color: '#1e293b',
                             drawBorder: false
                         },
                         ticks: {
-                            color: '#b7bdc6',
+                            color: '#8b95a5',
                             callback: function (value) {
                                 return '₹' + value.toLocaleString('en-IN');
                             },
@@ -676,6 +679,132 @@ class TradingPlatform {
                 }
             }
         });
+    }
+
+    generateOptionsChain() {
+        const tbody = document.getElementById('options-tbody');
+        if (!tbody) return;
+
+        const assets = this.marketData ? this.marketData[this.currentAssetType] : null;
+        if (!assets || !assets[this.currentSymbol]) return;
+
+        const currentPrice = assets[this.currentSymbol].price;
+        // Determine step size based on price level
+        let step = 10;
+        if (currentPrice > 10000) step = 100;
+        else if (currentPrice > 5000) step = 50;
+        else if (currentPrice > 1000) step = 20;
+        else if (currentPrice > 500) step = 10;
+
+        const atmStrike = Math.round(currentPrice / step) * step;
+        const numStrikes = 11; // Show 5 above, ATM, 5 below
+        const half = Math.floor(numStrikes / 2);
+
+        let rows = '';
+        for (let i = -half; i <= half; i++) {
+            const strike = atmStrike + (i * step);
+            const isATM = strike === atmStrike;
+            const distance = Math.abs(strike - currentPrice) / currentPrice;
+
+            // Call option
+            const callIntrinsic = Math.max(0, currentPrice - strike);
+            const callTimeValue = currentPrice * 0.02 * Math.exp(-Math.abs(i) * 0.3);
+            const callLTP = callIntrinsic + callTimeValue;
+            const callOI = Math.round(500000 * Math.exp(-Math.abs(i) * 0.4) + Math.random() * 50000);
+            const callIV = 18 + Math.abs(i) * 1.5 + Math.random() * 3;
+
+            // Put option
+            const putIntrinsic = Math.max(0, strike - currentPrice);
+            const putTimeValue = currentPrice * 0.02 * Math.exp(-Math.abs(i) * 0.3);
+            const putLTP = putIntrinsic + putTimeValue;
+            const putOI = Math.round(450000 * Math.exp(-Math.abs(i) * 0.35) + Math.random() * 40000);
+            const putIV = 19 + Math.abs(i) * 1.5 + Math.random() * 3;
+
+            const atmClass = isATM ? 'atm-row' : '';
+            const callClass = callLTP > currentPrice * 0.05 ? 'itm' : 'otm';
+            const putClass = putLTP > currentPrice * 0.05 ? 'itm' : 'otm';
+
+            rows += `
+                <tr class="${atmClass}">
+                    <td class="oi-cell call-oi">${this.formatLargeNumber(callOI)}</td>
+                    <td class="ltp-cell call-ltp ${callClass}" onclick="platform.selectOption('call', ${strike}, ${callLTP.toFixed(2)}, ${callIV.toFixed(1)})">₹${callLTP.toFixed(2)}</td>
+                    <td class="strike-cell${isATM ? ' atm' : ''}">${strike.toLocaleString('en-IN')}</td>
+                    <td class="ltp-cell put-ltp ${putClass}" onclick="platform.selectOption('put', ${strike}, ${putLTP.toFixed(2)}, ${putIV.toFixed(1)})">₹${putLTP.toFixed(2)}</td>
+                    <td class="oi-cell put-oi">${this.formatLargeNumber(putOI)}</td>
+                </tr>`;
+        }
+
+        tbody.innerHTML = rows;
+    }
+
+    selectOption(type, strike, ltp, iv) {
+        const side = type === 'call' ? 'CE' : 'PE';
+        this.selectedOption = { type, strike, ltp, iv };
+        const qtyInput = document.getElementById('trade-qty');
+        const priceInput = document.getElementById('trade-price');
+        if (priceInput) priceInput.value = ltp;
+        this.showNotification(`Selected ${strike} ${side} @ ₹${ltp} (IV: ${iv}%)`, 'success');
+    }
+
+    formatLargeNumber(num) {
+        if (num >= 10000000) return (num / 10000000).toFixed(1) + 'Cr';
+        if (num >= 100000) return (num / 100000).toFixed(1) + 'L';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toString();
+    }
+
+    updateGreeksDisplay() {
+        const greeksEl = document.getElementById('greeks-values');
+        if (!greeksEl) return;
+
+        const assets = this.marketData ? this.marketData[this.currentAssetType] : null;
+        if (!assets || !assets[this.currentSymbol]) return;
+
+        const currentPrice = assets[this.currentSymbol].price;
+        const iv = 20 + Math.random() * 10;
+        const dte = 15 + Math.floor(Math.random() * 20);
+        const riskFree = 6.5;
+
+        // ATM Greeks approximation
+        const t = dte / 365;
+        const sigma = iv / 100;
+        const s = currentPrice;
+        const k = s; // ATM
+        const r = riskFree / 100;
+
+        // Simplified Greeks
+        const delta = 0.5 + (Math.random() - 0.5) * 0.1;
+        const gamma = (0.001 + Math.random() * 0.002) * (1000 / s);
+        const theta = -(0.5 + Math.random() * 2) * (s / 100);
+        const vega = s * 0.001 * Math.sqrt(t);
+        const rho = delta * t * 0.01;
+
+        greeksEl.innerHTML = `
+            <div class="greek-row">
+                <span class="greek-label">Delta (Δ)</span>
+                <span class="greek-value">${delta.toFixed(4)}</span>
+            </div>
+            <div class="greek-row">
+                <span class="greek-label">Gamma (Γ)</span>
+                <span class="greek-value">${gamma.toFixed(4)}</span>
+            </div>
+            <div class="greek-row">
+                <span class="greek-label">Theta (Θ)</span>
+                <span class="greek-value negative">${theta.toFixed(2)}</span>
+            </div>
+            <div class="greek-row">
+                <span class="greek-label">Vega (ν)</span>
+                <span class="greek-value">${vega.toFixed(2)}</span>
+            </div>
+            <div class="greek-row">
+                <span class="greek-label">IV</span>
+                <span class="greek-value">${iv.toFixed(1)}%</span>
+            </div>
+            <div class="greek-row">
+                <span class="greek-label">DTE</span>
+                <span class="greek-value">${dte} days</span>
+            </div>
+        `;
     }
 
     generateChartData(symbol = 'DEFAULT', currentPrice = 2450) {
@@ -787,11 +916,11 @@ notificationStyles.textContent = `
         position: fixed;
         top: 80px;
         right: 20px;
-        background: var(--bg-secondary);
+        background: var(--bg-surface);
         color: white;
         padding: 15px 20px;
         border-radius: 8px;
-        border-left: 4px solid var(--accent-green);
+        border-left: 4px solid var(--green);
         z-index: 3000;
         animation: slideIn 0.3s ease;
         display: flex;
@@ -802,7 +931,7 @@ notificationStyles.textContent = `
     }
     
     .notification.error {
-        border-left-color: var(--accent-red);
+        border-left-color: var(--red);
     }
     
     .notification i {
