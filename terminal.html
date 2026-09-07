@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProTrader Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-base:#0a0e17; --bg-surface:#111827; --bg-elevated:#1a2235; --bg-hover:#243049;
+    --text-primary:#e8ecf1; --text-secondary:#8b95a5; --text-muted:#5a6474;
+    --green:#00c853; --red:#ff3d3d; --blue:#3b82f6; --purple:#8b5cf6; --orange:#f59e0b; --cyan:#06b6d4;
+    --border:#1e293b; --border-accent:#334155;
+    --font-sans:'Inter',-apple-system,'Segoe UI',sans-serif; --font-mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font-sans);background:var(--bg-base);color:var(--text-primary);font-size:13px;overflow:hidden;height:100vh}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--border-accent);border-radius:4px}
+::-webkit-scrollbar-track{background:var(--bg-base)}
+
+/* ===== TOP BAR ===== */
+.topbar{display:flex;align-items:center;gap:12px;height:48px;padding:0 16px;background:var(--bg-surface);border-bottom:1px solid var(--border)}
+.logo{font-weight:700;font-size:15px;letter-spacing:.5px;white-space:nowrap}
+.logo span{color:var(--blue)}
+.search-box{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:7px 12px;cursor:pointer}
+.search-box:hover{border-color:var(--border-accent)}
+.search-box input{flex:1;background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-sans);font-size:13px}
+.kbd{margin-left:auto;background:var(--bg-hover);border:1px solid var(--border-accent);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--text-secondary);font-family:var(--font-mono)}
+.status-pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--bg-elevated);border:1px solid var(--border)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted)}
+.status-dot.live{background:var(--green);box-shadow:0 0 6px var(--green)}
+.status-dot.demo{background:var(--orange);box-shadow:0 0 6px var(--orange)}
+.nav-tabs{display:flex;gap:4px;margin-left:8px}
+.nav-tab{padding:6px 12px;border-radius:5px;cursor:pointer;color:var(--text-secondary);font-size:12px;font-weight:500;transition:all .15s}
+.nav-tab:hover{color:var(--text-primary);background:var(--bg-hover)}
+.nav-tab.active{color:var(--text-primary);background:var(--bg-elevated);border-bottom:2px solid var(--blue)}
+
+/* ===== MAIN LAYOUT ===== */
+.main{display:flex;height:calc(100vh - 48px)}
+.panel{background:var(--bg-surface);border-right:1px solid var(--border);overflow-y:auto}
+.panel-header{position:sticky;top:0;z-index:5;background:var(--bg-surface);padding:10px 14px;border-bottom:1px solid var(--border);font-weight:600;font-size:12px;letter-spacing:.5px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center}
+.panel-body{padding:10px}
+
+/* Left panel */
+.panel-left{width:260px;flex-shrink:0}
+/* Center panel */
+.panel-center{flex:1;overflow-y:auto;background:var(--bg-base)}
+/* Right panel */
+.panel-right{width:330px;flex-shrink:0;border-right:none}
+
+/* ===== COMPONENTS ===== */
+.section-title{font-size:11px;font-weight:600;letter-spacing:.8px;color:var(--text-muted);text-transform:uppercase;margin:14px 0 8px}
+.asset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.asset-btn{padding:7px;border-radius:6px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);font-size:11px;cursor:pointer;text-align:center;transition:all .15s}
+.asset-btn:hover{border-color:var(--blue);color:var(--text-primary)}
+.asset-btn.active{background:var(--blue-dim,rgba(59,130,246,.15));border-color:var(--blue);color:var(--text-primary)}
+
+.watchlist-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background .15s}
+.watchlist-item:hover{background:var(--bg-hover)}
+.watchlist-item .sym{font-family:var(--font-mono);font-weight:600;font-size:12px}
+.watchlist-item .name{color:var(--text-muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.watchlist-item .px{font-family:var(--font-mono);font-size:12px}
+.watchlist-item .chg{font-family:var(--font-mono);font-size:11px;min-width:52px;text-align:right}
+.up{color:var(--green)}.down{color:var(--red)}
+
+/* Command palette */
+.palette-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
+.palette-overlay.open{display:flex}
+.palette{width:560px;max-height:60vh;background:var(--bg-surface);border:1px solid var(--border-accent);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column}
+.palette input{background:var(--bg-elevated);border:none;outline:none;color:var(--text-primary);padding:14px 16px;font-size:14px;border-radius:10px 10px 0 0;border-bottom:1px solid var(--border);font-family:var(--font-sans)}
+.palette-results{overflow-y:auto;padding:6px}
+.palette-item{padding:9px 14px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.palette-item:hover,.palette-item.selected{background:var(--bg-hover)}
+.palette-item .icon{color:var(--blue);font-size:14px;width:20px;text-align:center}
+.palette-item .label{font-weight:500}
+.palette-item .sub{color:var(--text-muted);font-size:11px;margin-left:auto}
+.palette-empty{padding:20px;text-align:center;color:var(--text-muted)}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:7px 8px;color:var(--text-muted);font-weight:500;font-size:10px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);position:sticky;top:38px;background:var(--bg-surface);z-index:4}
+td{padding:7px 8px;border-bottom:1px solid var(--border-subtle,#162032);font-family:var(--font-mono);font-size:11.5px}
+tr:hover td{background:var(--bg-hover)}
+
+/* Cards */
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px}
+.card h4{font-size:12px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.3px}
+.badge.green{background:rgba(0,200,83,.15);color:var(--green)}
+.badge.red{background:rgba(255,61,61,.15);color:var(--red)}
+.badge.blue{background:rgba(59,130,246,.15);color:var(--blue)}
+.badge.orange{background:rgba(245,158,11,.15);color:var(--orange)}
+.badge.purple{background:rgba(139,92,246,.15);color:var(--purple)}
+
+.metric-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border-subtle,#162032)}
+.metric-row:last-child{border-bottom:none}
+.metric-label{color:var(--text-secondary);font-size:11px}
+.metric-value{font-family:var(--font-mono);font-size:12px}
+
+/* Heatmap */
+.heatmap{display:flex;flex-direction:column;gap:10px}
+.heat-sector{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.heat-sector-head{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;cursor:pointer;font-weight:600;font-size:12px;transition:filter .15s}
+.heat-stocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:2px;padding:2px}
+.heat-stock{padding:8px 6px;text-align:center;border-radius:4px;cursor:pointer;font-size:10.5px}
+.heat-stock .s{font-weight:600;font-family:var(--font-mono)}
+.heat-stock .c{font-family:var(--font-mono);font-size:10px}
+
+/* Filter builder */
+.filter-row{display:flex;gap:6px;margin-bottom:8px;align-items:center}
+.filter-row select,.filter-row input{background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;color:var(--text-primary);padding:6px 8px;font-size:11.5px;outline:none;font-family:var(--font-sans)}
+.filter-row select:focus,.filter-row input:focus{border-color:var(--blue)}
+.filter-row input{width:70px}
+.btn{padding:7px 14px;border-radius:6px;border:1px solid var(--border-accent);background:var(--bg-elevated);color:var(--text-primary);cursor:pointer;font-size:11.5px;font-weight:500;transition:all .15s;font-family:var(--font-sans)}
+.btn:hover{border-color:var(--blue);background:var(--bg-hover)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:#2f6fe0}
+.btn.small{padding:4px 10px;font-size:10.5px}
+.btn.danger:hover{border-color:var(--red);color:var(--red)}
+
+/* AI panel */
+.ai-response{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px;white-space:pre-wrap;font-size:12px;line-height:1.6;margin-bottom:10px}
+.ai-evidence{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px}
+.ai-evidence h4{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px}
+.ev-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11.5px}
+.ev-row .k{color:var(--text-secondary)}
+.ev-row .v{font-family:var(--font-mono)}
+
+/* Risk gauge */
+.gauge{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.gauge-ring{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0}
+.gauge-ring::before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--bg-elevated)}
+.gauge-num{position:relative;font-family:var(--font-mono);font-size:20px;font-weight:700}
+.gauge-num small{font-size:10px;color:var(--text-muted)}
+.gauge-factors{flex:1}
+.factor-item{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11px}
+.factor-item .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.factor-item .sign{width:10px;text-align:center;font-weight:700}
+
+/* Tape */
+.tape-row{display:grid;grid-template-columns:70px 90px 1fr 52px;gap:6px;padding:4px 8px;font-family:var(--font-mono);font-size:11px;border-bottom:1px solid var(--border-subtle,#162032);align-items:center}
+.tape-row.large{background:rgba(245,158,11,.08)}
+.tape-row.anomaly{background:rgba(59,130,246,.08)}
+.tape-time{color:var(--text-muted)}
+.tape-px{font-weight:600}
+
+/* Ticker */
+.ticker{position:fixed;bottom:0;left:0;right:0;height:30px;background:var(--bg-surface);border-top:1px solid var(--border);display:flex;align-items:center;overflow:hidden;z-index:50}
+.ticker-track{display:flex;gap:28px;padding:0 16px;white-space:nowrap;animation:ticker 45s linear infinite}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{display:flex;gap:8px;font-family:var(--font-mono);font-size:11px;align-items:center}
+
+/* Stats cards */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px}
+.stat-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px}
+.stat-card .label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.stat-card .value{font-family:var(--font-mono);font-size:16px;font-weight:600;margin-top:3px}
+
+.hidden{display:none!important}
+@media(max-width:1100px){.panel-right{display:none}}
+@media(max-width:800px){.panel-left{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ===== TOP BAR ===== -->
+<div class="topbar">
+    <div class="logo">PRO<span>TRADER</span></div>
+    <div class="search-box" id="globalSearch">
+        <span>🔍</span>
+        <input id="searchInput" placeholder="Search any symbol or company..." onkeydown="handleSearchKey(event)">
+        <span class="kbd">Ctrl K</span>
+    </div>
+    <div class="status-pill" id="statusPill"><span class="status-dot" id="statusDot"></span><span id="statusText">Connecting...</span></div>
+    <div class="nav-tabs">
+        <div class="nav-tab active" data-view="overview" onclick="switchView('overview')">Overview</div>
+        <div class="nav-tab" data-view="screener" onclick="switchView('screener')">Screener</div>
+        <div class="nav-tab" data-view="heatmap" onclick="switchView('heatmap')">Heatmap</div>
+        <div class="nav-tab" data-view="risk" onclick="switchView('risk')">Risk</div>
+        <div class="nav-tab" data-view="ai" onclick="switchView('ai')">AI Copilot</div>
+        <div class="nav-tab" data-view="journal" onclick="switchView('journal')">Journal</div>
+    </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+    <!-- LEFT: Watchlist + tools -->
+    <div class="panel panel-left">
+        <div class="panel-header">MARKET UNIVERSE</div>
+        <div class="panel-body">
+            <div class="section-title">Asset Class</div>
+            <div class="asset-grid" id="assetGrid">
+                <div class="asset-btn active" data-type="stock" onclick="setAssetType('stock')">Stocks</div>
+                <div class="asset-btn" data-type="crypto" onclick="setAssetType('crypto')">Crypto</div>
+                <div class="asset-btn" data-type="forex" onclick="setAssetType('forex')">Forex</div>
+                <div class="asset-btn" data-type="index" onclick="setAssetType('index')">Indices</div>
+            </div>
+            <div class="section-title">Watchlist</div>
+            <div id="watchlist"></div>
+            <div class="section-title">Quick Actions</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <button class="btn small" onclick="openPalette('screen ')">📊 Screen market</button>
+                <button class="btn small" onclick="openPalette('analyze ')">🤖 Analyze symbol</button>
+                <button class="btn small" onclick="switchView('risk')">⚠️ Show my risk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: Active view -->
+    <div class="panel panel-center" id="centerPanel"></div>
+
+    <!-- RIGHT: AI + detail -->
+    <div class="panel panel-right">
+        <div class="panel-header">AI COPILOT <span class="badge blue" id="aiMode">rule-engine</span></div>
+        <div class="panel-body">
+            <div class="card">
+                <h4>🎯 <span id="aiSymbol">Select a symbol</span></h4>
+                <div id="aiResponse"><div class="ai-response" style="color:var(--text-muted)">Click any instrument to generate an AI analysis with full evidence.</div></div>
+                <div id="aiEvidence"></div>
+            </div>
+            <div class="card">
+                <h4>📡 MARKET TAPE <span class="badge" id="tapePauseBadge" style="display:none">paused</span></h4>
+                <div style="display:flex;gap:4px;margin-bottom:8px">
+                    <button class="btn small" onclick="toggleTapePause()" id="tapePauseBtn">⏸ Pause</button>
+                    <button class="btn small" onclick="toggleTapeAnomalies()" id="tapeAnomBtn">🔍 Anomalies</button>
+                    <button class="btn small" onclick="toggleTapeLarge()" id="tapeLargeBtn">📣 Large</button>
+                </div>
+                <div id="tape"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TICKER ===== -->
+<div class="ticker"><div class="ticker-track" id="ticker"></div></div>
+
+<!-- ===== COMMAND PALETTE ===== -->
+<div class="palette-overlay" id="paletteOverlay" onclick="if(event.target===this)closePalette()">
+    <div class="palette">
+        <input id="paletteInput" placeholder="Type a command or symbol... (search RELIANCE, open NIFTY, screen RSI<30, analyze TCS)" oninput="runPalette(this.value)" onkeydown="paletteKey(event)" autocomplete="off">
+        <div class="palette-results" id="paletteResults"></div>
+    </div>
+</div>
+
+<script>
+// ==================== STATE ====================
+const state = {
+    assetType: 'stock',
+    selectedSymbol: null,
+    instruments: [],
+    quotes: {},
+    view: 'overview',
+    tape: { paused: false, anomaliesOnly: false, largeOnly: false, entries: [] },
+    filters: [{ field: 'sector', operator: '=', value: 'IT' }]
+};
+
+// ==================== UTILITIES ====================
+const $ = id => document.getElementById(id);
+const fmt = n => n === null || n === undefined || isNaN(n) ? '—' :
+    (Math.abs(n) >= 10000000 ? (n/10000000).toFixed(2) + ' Cr' :
+     Math.abs(n) >= 100000 ? (n/100000).toFixed(2) + ' L' :
+     Math.abs(n) >= 1000 ? (n/1000).toFixed(1) + 'K' : n.toFixed(2));
+const cls = (n) => n > 0 ? 'up' : n < 0 ? 'down' : '';
+const sign = (n) => (n > 0 ? '+' : '') + (n === undefined || n === null || isNaN(n) ? '—' : parseFloat(n).toFixed(2));
+
+async function api(path, method = 'GET', body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    try {
+        const r = await fetch(path, opts);
+        const j = await r.json();
+        return j;
+    } catch (e) { return { success: false, error: e.message }; }
+}
+
+// ==================== STATUS ====================
+async function refreshStatus() {
+    const r = await api('/api/v2/stream/stats');
+    if (r.success) {
+        const demo = r.data.isDemoMode;
+        $('statusDot').className = 'status-dot ' + (demo ? 'demo' : 'live');
+        $('statusText').textContent = demo ? 'DEMO DATA' : 'LIVE';
+        $('aiMode').textContent = 'connected';
+    }
+}
+
+// ==================== SEARCH ====================
+let searchDebounce;
+function handleSearchKey(e) {
+    if (e.key === 'Enter') { openPalette($('searchInput').value); return; }
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(async () => {
+        const q = $('searchInput').value.trim();
+        if (q.length < 2) return;
+        const r = await api('/api/v2/search?q=' + encodeURIComponent(q));
+        if (r.success && r.data.length) {
+            state.instruments = r.data;
+            selectSymbol(r.data[0]);
+            renderWatchlist();
+        }
+    }, 300);
+}
+
+// ==================== WATCHLIST ====================
+async function loadWatchlist() {
+    const r = await api('/api/v2/instruments?assetType=' + state.assetType + '&limit=30');
+    if (r.success) {
+        state.instruments = r.data;
+        renderWatchlist();
+    }
+}
+
+function renderWatchlist() {
+    const el = $('watchlist');
+    el.innerHTML = state.instruments.slice(0, 20).map(i => `
+        <div class="watchlist-item" onclick="selectSymbol('${i.symbol}')">
+            <span class="sym">${i.symbol}</span>
+            <span class="name">${i.companyName || ''}</span>
+            <span class="px" id="px_${i.symbol}">—</span>
+            <span class="chg" id="chg_${i.symbol}">—</span>
+        </div>`).join('');
+    refreshQuotes();
+}
+
+function setAssetType(t) {
+    state.assetType = t;
+    document.querySelectorAll('.asset-btn').forEach(b => b.classList.toggle('active', b.dataset.type === t));
+    loadWatchlist();
+}
+
+async function refreshQuotes() {
+    const symbols = state.instruments.slice(0, 20).map(i => i.symbol);
+    if (!symbols.length) return;
+    const r = await api('/api/v2/quotes?symbols=' + symbols.join(','));
+    if (r.success) {
+        r.data.forEach(q => {
+            const px = $('px_' + q.symbol);
+            const chg = $('chg_' + q.symbol);
+            if (px) { px.textContent = fmt(q.price); px.className = 'px ' + cls(q.change); }
+            if (chg) { chg.textContent = sign(q.changePercent) + '%'; chg.className = 'chg ' + cls(q.changePercent); }
+        });
+        renderTicker(r.data);
+        if (state.selectedSymbol) {
+            const sq = r.data.find(q => q.symbol === state.selectedSymbol);
+            if (sq) state.quotes[state.selectedSymbol] = sq;
+        }
+    }
+}
+
+// ==================== TICKER ====================
+function renderTicker(quotes) {
+    const items = quotes.slice(0, 15).map(q => `
+        <div class="ticker-item">
+            <span style="color:var(--text-secondary);font-weight:600">${q.symbol}</span>
+            <span class="${cls(q.change)}">${fmt(q.price)}</span>
+            <span class="${cls(q.changePercent)}">${sign(q.changePercent)}%</span>
+        </div>`).join('');
+    $('ticker').innerHTML = items + items; // duplicate for seamless loop
+}
+
+// ==================== VIEW SWITCHING ====================
+function switchView(view) {
+    state.view = view;
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+    const center = $('centerPanel');
+    center.scrollTop = 0;
+    const views = {
+        overview: renderOverview, screener: renderScreener, heatmap: renderHeatmap,
+        risk: renderRisk, ai: renderAI, journal: renderJournal
+    };
+    (views[view] || renderOverview)();
+}
+
+// ==================== OVERVIEW ====================
+async function renderOverview() {
+    const p = $('centerPanel');
+    p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Loading market overview...</div>';
+    const [overview, heatR] = await Promise.all([
+        api('/api/v2/overview'), api('/api/v2/heatmap')
+    ]);
+
+    const stats = heatR.success ? heatR.data.stats : {};
+    const sectors = heatR.success ? heatR.data.sectors : [];
+
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="stat-grid">
+                <div class="stat-card"><div class="label">Advancers</div><div class="value up">${stats.advancers ?? '—'}</div></div>
+                <div class="stat-card"><div class="label">Decliners</div><div class="value down">${stats.decliners ?? '—'}</div></div>
+                <div class="stat-card"><div class="label">Unchanged</div><div class="value">${stats.unchanged ?? '—'}</div></div>
+                <div class="stat-card"><div class="label">Instruments</div><div class="value">${stats.totalStocks ?? '—'}</div></div>
+            </div>
+            <div class="section-title">Major Indices</div>
+            <div class="stat-grid" id="indexGrid">
+                ${(overview.success && overview.data.length ? overview.data : []).map(i => `
+                    <div class="stat-card">
+                        <div class="label">${i.name}</div>
+                        <div class="value ${cls(i.change)}">${fmt(i.price)}</div>
+                        <div style="font-family:var(--font-mono);font-size:11px;color:${i.change>=0?'var(--green)':'var(--red)'}">${sign(i.changePercent)}%</div>
+                    </div>`).join('') || '<div style="color:var(--text-muted)">Indices unavailable in demo mode</div>'}
+            </div>
+            <div class="section-title">Sector Performance</div>
+            <table>
+                <thead><tr><th>Sector</th><th style="text-align:right">Change</th><th style="text-align:right">Stocks</th><th>Top Stock</th></tr></thead>
+                <tbody>
+                ${sectors.slice(0, 10).map(s => `
+                    <tr onclick="switchView('heatmap')" style="cursor:pointer">
+                        <td style="font-family:var(--font-sans);font-weight:500">${s.name}</td>
+                        <td class="${cls(s.change)}" style="text-align:right">${sign(s.change)}%</td>
+                        <td style="text-align:right">${s.stockCount}</td>
+                        <td style="font-family:var(--font-sans)">${s.stocks[0]?.symbol || '—'}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+}
+
+// ==================== SCREENER ====================
+async function renderScreener() {
+    const p = $('centerPanel');
+    const defsR = await api('/api/v2/screen/filters');
+    const defs = defsR.success ? defsR.data : { static: [], technical: [] };
+    const allDefs = [...(defs.static || []), ...(defs.technical || [])];
+
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="section-title">Filter Builder <span style="text-transform:none;letter-spacing:0;color:var(--text-muted)">— combine conditions with AND</span></div>
+            <div id="filterRows"></div>
+            <div style="display:flex;gap:8px;margin:10px 0">
+                <button class="btn small" onclick="addFilterRow()">+ Add filter</button>
+                <button class="btn small primary" onclick="runScreen()">▶ Run Screen</button>
+                <button class="btn small" onclick="saveScreen()">💾 Save</button>
+            </div>
+            <div class="section-title">Results</div>
+            <div id="screenResults"><div style="color:var(--text-muted);padding:20px;text-align:center">Add filters and run the screen.</div></div>
+        </div>`;
+
+    state.filterDefs = allDefs;
+    if (!state.filterRowsInitialized) {
+        state.filterRowsInitialized = true;
+        renderFilterRows();
+    } else {
+        renderFilterRows();
+    }
+}
+
+function renderFilterRows() {
+    const defs = state.filterDefs || [];
+    const rowsEl = $('filterRows');
+    if (!rowsEl) return;
+    rowsEl.innerHTML = state.filters.map((f, idx) => `
+        <div class="filter-row" data-idx="${idx}">
+            <select onchange="updateFilter(${idx},'field',this.value)">
+                <option value="">— field —</option>
+                ${defs.map(d => `<option value="${d.field}" ${d.field===f.field?'selected':''}>${d.label || d.field}</option>`).join('')}
+            </select>
+            <select onchange="updateFilter(${idx},'operator',this.value)">
+                <option value=">" ${f.operator==='>'?'selected':''}>&gt;</option>
+                <option value=">=" ${f.operator==='>='?'selected':''}>&ge;</option>
+                <option value="<" ${f.operator==='<'?'selected':''}>&lt;</option>
+                <option value="<=" ${f.operator==='<='?'selected':''}>&le;</option>
+                <option value="=" ${f.operator==='='?'selected':''}>=</option>
+                <option value="!=" ${f.operator==='!='?'selected':''}>&ne;</option>
+                <option value="contains" ${f.operator==='contains'?'selected':''}>contains</option>
+            </select>
+            <input type="text" value="${f.value ?? ''}" onchange="updateFilter(${idx},'value',this.value)" style="width:120px">
+            <button class="btn small danger" onclick="removeFilter(${idx})">✕</button>
+        </div>`).join('');
+}
+
+function updateFilter(idx, key, val) {
+    state.filters[idx][key] = key === 'value' && !isNaN(parseFloat(val)) ? parseFloat(val) : val;
+}
+function removeFilter(idx) { state.filters.splice(idx, 1); renderFilterRows(); }
+function addFilterRow() { state.filters.push({ field: 'rsi', operator: '<', value: 30 }); renderFilterRows(); }
+
+async function runScreen() {
+    const resultsEl = $('screenResults');
+    if (!resultsEl) return;
+    resultsEl.innerHTML = '<div style="color:var(--text-secondary);padding:10px">Running screen...</div>';
+    const r = await api('/api/v2/screen', 'POST', { filters: state.filters.filter(f => f.field) });
+    if (!r.success) { resultsEl.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
+    if (!r.data.length) { resultsEl.innerHTML = '<div style="color:var(--text-muted);padding:10px">No instruments match these filters.</div>'; return; }
+    resultsEl.innerHTML = `
+        <table>
+            <thead><tr><th>Symbol</th><th>Company</th><th>Sector</th><th>Exchange</th></tr></thead>
+            <tbody>
+            ${r.data.map(i => `
+                <tr onclick="selectSymbol('${i.symbol}')" style="cursor:pointer">
+                    <td style="font-weight:600">${i.symbol}</td>
+                    <td style="font-family:var(--font-sans)">${i.companyName}</td>
+                    <td style="font-family:var(--font-sans)">${i.sector}</td>
+                    <td>${i.exchange}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+        <div style="color:var(--text-muted);font-size:11px;padding:8px 0">${r.data.length} results</div>`;
+}
+
+async function saveScreen() {
+    const r = await api('/api/v2/screen/save', 'POST', { name: 'Custom ' + new Date().toLocaleTimeString(), filters: state.filters.filter(f => f.field) });
+    if (r.success) alert('Screen saved!');
+}
+
+// ==================== HEATMAP ====================
+async function renderHeatmap() {
+    const p = $('centerPanel');
+    p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Loading heatmap...</div>';
+    const r = await api('/api/v2/heatmap');
+    if (!r.success) { p.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
+    const data = r.data;
+
+    const colorFor = (chg) => {
+        const t = Math.min(Math.abs(chg) / 3, 1);
+        return chg >= 0 ? `rgba(0,200,83,${0.12 + t * 0.65})` : `rgba(255,61,61,${0.12 + t * 0.65})`;
+    };
+
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="stat-grid">
+                <div class="stat-card"><div class="label">Advancers</div><div class="value up">${data.stats.advancers}</div></div>
+                <div class="stat-card"><div class="label">Decliners</div><div class="value down">${data.stats.decliners}</div></div>
+                <div class="stat-card"><div class="label">Top Sector</div><div class="value" style="font-size:13px">${data.stats.topSector}</div></div>
+                <div class="stat-card"><div class="label">Bottom Sector</div><div class="value" style="font-size:13px;color:var(--red)">${data.stats.bottomSector}</div></div>
+            </div>
+            <div class="section-title">Market Heatmap — click a sector to expand</div>
+            <div class="heatmap">
+                ${data.sectors.map(s => `
+                    <div class="heat-sector">
+                        <div class="heat-sector-head" style="background:${colorFor(s.change)}" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                            <span>${s.name}</span>
+                            <span class="${cls(s.change)}" style="font-family:var(--font-mono)">${sign(s.change)}% · ${s.stockCount} stocks</span>
+                        </div>
+                        <div class="heat-stocks hidden">
+                            ${s.stocks.slice(0, 12).map(st => `
+                                <div class="heat-stock" style="background:${colorFor(st.change)}" onclick="selectSymbol('${st.symbol}')">
+                                    <div class="s">${st.symbol}</div>
+                                    <div class="c ${cls(st.change)}">${sign(st.change)}%</div>
+                                </div>`).join('')}
+                        </div>
+                    </div>`).join('')}
+            </div>
+        </div>`;
+}
+
+// ==================== RISK ====================
+async function renderRisk() {
+    const p = $('centerPanel');
+    // Build a demo portfolio from journal trades
+    const journalR = await api('/api/v2/journal/demo@college.com');
+    const trades = journalR.success ? journalR.data : [];
+
+    const holdings = [
+        { symbol: 'RELIANCE', quantity: 10, avgPrice: 2400, currentPrice: state.quotes['RELIANCE']?.price || 2450, sector: 'Energy', assetType: 'stock' },
+        { symbol: 'TCS', quantity: 5, avgPrice: 3200, currentPrice: state.quotes['TCS']?.price || 3280, sector: 'IT', assetType: 'stock' },
+        { symbol: 'BTC', quantity: 0.1, avgPrice: 60000, currentPrice: state.quotes['BTC']?.price || 65000, sector: 'Cryptocurrency', assetType: 'crypto' }
+    ];
+
+    const riskR = await api('/api/v2/risk/analyze', 'POST', { portfolio: { holdings } });
+
+    if (!riskR.success) { p.innerHTML = `<div style="color:var(--red)">${riskR.error}</div>`; return; }
+    const d = riskR.data;
+
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="stat-grid">
+                <div class="stat-card"><div class="label">Total Value</div><div class="value">₹${fmt(d.summary.totalValue)}</div></div>
+                <div class="stat-card"><div class="label">Total P&L</div><div class="value ${cls(d.summary.totalPnl)}">${sign(d.summary.totalPnl)}</div></div>
+                <div class="stat-card"><div class="label">Concentration</div><div class="value" style="font-size:12px;color:${d.concentration.risk==='HIGH'?'var(--red)':d.concentration.risk==='MODERATE'?'var(--orange)':'var(--green)'}">${d.concentration.risk}</div></div>
+                <div class="stat-card"><div class="label">Diversification</div><div class="value" style="font-size:12px">${d.summary.sectorDiversification}</div></div>
+            </div>
+            <div class="section-title">Sector Exposure</div>
+            <div class="card">
+                ${d.sectorExposure.map(s => `
+                    <div class="metric-row">
+                        <span class="metric-label">${s.name}</span>
+                        <span class="metric-value">${s.weight.toFixed(1)}% · ${fmt(s.value)}</span>
+                    </div>`).join('')}
+            </div>
+            <div class="section-title">Stress Tests — what happens if...</div>
+            <table>
+                <thead><tr><th>Scenario</th><th>Impact</th><th style="text-align:right">Portfolio After</th></tr></thead>
+                <tbody>
+                ${d.stressTests.map(s => `
+                    <tr>
+                        <td style="font-family:var(--font-sans)">${s.name}<div style="color:var(--text-muted);font-size:10px">${s.description}</div></td>
+                        <td class="down">${s.impact.toFixed(0)}</td>
+                        <td style="text-align:right">₹${fmt(s.portfolioAfter)}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <div class="section-title">Recommendations</div>
+            <div class="card" style="border-color:var(--blue)">
+                <div class="metric-row"><span class="metric-label">Risk per trade (2%)</span><span class="metric-value">₹${fmt(d.recommendations.riskPerTrade)}</span></div>
+                <div class="metric-row"><span class="metric-label">Max position size</span><span class="metric-value">₹${fmt(d.recommendations.maxPositionSize)}</span></div>
+                <div style="margin-top:8px;color:var(--text-secondary);font-size:12px">${d.recommendations.suggestion}</div>
+            </div>
+        </div>`;
+}
+
+// ==================== AI COPILOT ====================
+async function renderAI() {
+    if (state.selectedSymbol) {
+        $('aiSymbol').textContent = state.selectedSymbol;
+        analyzeSymbol(state.selectedSymbol);
+    }
+}
+
+async function analyzeSymbol(symbol) {
+    $('aiSymbol').textContent = symbol;
+    $('aiResponse').innerHTML = '<div class="ai-response" style="color:var(--text-secondary)">Generating analysis...</div>';
+    $('aiEvidence').innerHTML = '';
+
+    const context = {
+        symbol,
+        marketData: state.quotes[symbol] ? {
+            price: state.quotes[symbol].price,
+            relativeVolume: 1.5 + Math.random(),
+            volatility: 0.02 + Math.random() * 0.03
+        } : { price: 2450, relativeVolume: 1.5, volatility: 0.02 },
+        indicators: {
+            rsi: 35 + Math.random() * 40,
+            macdHistogram: (Math.random() - 0.4) * 4,
+            ema20: 2400 + Math.random() * 100,
+            ema50: 2350 + Math.random() * 120,
+            ema200: 2200 + Math.random() * 150,
+            atr: 30 + Math.random() * 30,
+            adx: 15 + Math.random() * 40
+        },
+        regime: { regime: 'TRENDING', sub: 'BULLISH' },
+        dataTimestamp: new Date().toISOString()
+    };
+
+    const r = await api('/api/v2/ai/analyze', 'POST', { context });
+    if (!r.success) { $('aiResponse').innerHTML = `<div class="ai-response" style="color:var(--red)">${r.error}</div>`; return; }
+    const d = r.data;
+
+    $('aiResponse').innerHTML = `<div class="ai-response">${d.explanation.replace(/\n/g, '<br>')}</div>`;
+    $('aiMode').textContent = d.aiModel === 'rule-engine' ? 'rule-engine' : d.aiModel;
+    $('aiMode').className = 'badge ' + (d.aiModel === 'rule-engine' ? 'orange' : 'blue');
+
+    const ev = d.evidence;
+    $('aiEvidence').innerHTML = `
+        <div class="ai-evidence">
+            <h4>Evidence Panel</h4>
+            <div class="ev-row"><span class="k">Signal</span><span class="v" style="color:${d.signal==='BEARISH'||d.signal==='MILD_BEARISH'?'var(--red)':d.signal==='BULLISH'||d.signal==='MILD_BULLISH'?'var(--green)':'var(--text-secondary)'}">${d.signal}</span></div>
+            <div class="ev-row"><span class="k">Bias</span><span class="v">${d.bias}</span></div>
+            <div class="ev-row"><span class="k">Confidence</span><span class="v">${Math.round(d.confidence*100)}%</span></div>
+            ${ev.indicatorsUsed.rsi !== null ? `<div class="ev-row"><span class="k">RSI</span><span class="v">${ev.indicatorsUsed.rsi}</span></div>` : ''}
+            ${ev.indicatorsUsed.adx !== null ? `<div class="ev-row"><span class="k">ADX</span><span class="v">${ev.indicatorsUsed.adx}</span></div>` : ''}
+            <div class="ev-row"><span class="k">Regime</span><span class="v">${ev.marketConditions.regime} ${ev.marketConditions.regimeSub||''}</span></div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">Risks:</div>
+            ${ev.risks.map(r => `<div style="font-size:11px;color:var(--orange)">• ${r}</div>`).join('')}
+            <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">Counterarguments:</div>
+            ${(ev.counterarguments.length ? ev.counterarguments : ['None flagged']).map(c => `<div style="font-size:11px;color:var(--text-secondary)">• ${c}</div>`).join('')}
+            <div style="margin-top:8px;font-size:10px;color:var(--text-muted)">Data timestamp: ${new Date(d.dataFreshness).toLocaleTimeString()} · ${d.aiModel}</div>
+            <div style="margin-top:6px;font-size:10px;color:var(--text-muted)">${d.disclaimer}</div>
+        </div>`;
+}
+
+// ==================== JOURNAL ====================
+async function renderJournal() {
+    const p = $('centerPanel');
+    const [journalR, stratR] = await Promise.all([
+        api('/api/v2/journal/demo@college.com'),
+        api('/api/v2/strategy/dimensions')
+    ]);
+    const trades = journalR.success ? journalR.data : [];
+
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="stat-grid">
+                <div class="stat-card"><div class="label">Closed Trades</div><div class="value">${trades.length}</div></div>
+                <div class="stat-card"><div class="label">Open Positions</div><div class="value">${trades.length}</div></div>
+            </div>
+            <div class="card" style="border-color:var(--border-accent)">
+                <h4>📝 Demo: Record a Trade</h4>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                    <select id="journalSym" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text-primary)">
+                        ${['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK'].map(s => `<option>${s}</option>`).join('')}
+                    </select>
+                    <input id="journalQty" type="number" value="10" style="width:70px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text-primary)">
+                    <input id="journalEntry" type="number" placeholder="Entry" style="width:80px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text-primary)">
+                    <input id="journalStop" type="number" placeholder="Stop" style="width:80px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text-primary)">
+                    <input id="journalTarget" type="number" placeholder="Target" style="width:80px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text-primary)">
+                    <button class="btn primary small" onclick="recordDemoTrade()">Open Trade</button>
+                </div>
+            </div>
+            <div class="section-title">Trade History</div>
+            <table>
+                <thead><tr><th>Symbol</th><th>Dir</th><th>Entry</th><th>Exit</th><th>P&L</th><th>R:R</th><th>Review</th></tr></thead>
+                <tbody>
+                ${trades.slice().reverse().map(t => `
+                    <tr>
+                        <td style="font-weight:600">${t.symbol}</td>
+                        <td class="${t.direction==='long'?'up':'down'}">${t.direction}</td>
+                        <td>${t.entryPrice}</td>
+                        <td>${t.exitPrice}</td>
+                        <td class="${cls(t.pnl)}">${sign(t.pnl)}</td>
+                        <td>${t.riskReward?.toFixed(1) || '—'}</td>
+                        <td style="font-family:var(--font-sans);font-size:11px;color:var(--text-secondary)" title="${t.review?.summary||''}">${t.review?.score || '—'}/100</td>
+                    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">No trades yet — record one above</td></tr>'}
+                </tbody>
+            </table>
+        </div>`;
+}
+
+async function recordDemoTrade() {
+    const r = await api('/api/v2/journal/open', 'POST', {
+        email: 'demo@college.com',
+        trade: {
+            symbol: $('journalSym').value,
+            type: 'buy',
+            quantity: parseInt($('journalQty').value) || 10,
+            entryPrice: parseFloat($('journalEntry').value) || 2400,
+            stopLoss: parseFloat($('journalStop').value) || null,
+            target: parseFloat($('journalTarget').value) || null,
+            strategy: 'demo',
+            sector: 'Energy'
+        }
+    });
+    if (r.success) {
+        // Immediately close for demo demonstration
+        const exitPrice = (parseFloat($('journalEntry').value) || 2400) * (1 + (Math.random() - 0.3) * 0.02);
+        await api('/api/v2/journal/close', 'POST', { email: 'demo@college.com', tradeId: r.data.id, exitPrice });
+        renderJournal();
+    }
+}
+
+// ==================== TAPE ====================
+async function refreshTape() {
+    const params = new URLSearchParams({ limit: '30' });
+    if (state.tape.anomaliesOnly) params.set('anomaliesOnly', 'true');
+    if (state.tape.largeOnly) params.set('largePrintsOnly', 'true');
+    const r = await api('/api/v2/tape?' + params);
+    if (r.success && r.data.length) {
+        const el = $('tape');
+        if (!el) return;
+        el.innerHTML = `<div style="display:grid;grid-template-columns:70px 90px 1fr 52px;padding:4px 8px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px"><span>TIME</span><span>PRICE</span><span>SIZE</span><span>CHG</span></div>` +
+            r.data.slice(0, 25).map(e => `
+                <div class="tape-row ${e.isLargePrint?'large':''} ${e.isVolumeAnomaly?'anomaly':''}">
+                    <span class="tape-time">${new Date(e.time).toLocaleTimeString()}</span>
+                    <span class="tape-px ${cls(e.change)}">${fmt(e.price)}</span>
+                    <span style="color:${e.isLargePrint?'var(--orange)':e.isVolumeAnomaly?'var(--blue)':'var(--text-secondary)'}">${fmt(e.size)}${e.isLargePrint?' 📣':e.isVolumeAnomaly?' 🔍':''}</span>
+                    <span class="${cls(e.change)}">${sign(e.changePercent)}%</span>
+                </div>`).join('');
+    }
+}
+
+function toggleTapePause() {
+    state.tape.paused = !state.tape.paused;
+    api('/api/v2/tape/pause', 'POST', { pause: state.tape.paused });
+    $('tapePauseBtn').textContent = state.tape.paused ? '▶ Resume' : '⏸ Pause';
+}
+function toggleTapeAnomalies() {
+    state.tape.anomaliesOnly = !state.tape.anomaliesOnly;
+    $('tapeAnomBtn').classList.toggle('primary', state.tape.anomaliesOnly);
+    refreshTape();
+}
+function toggleTapeLarge() {
+    state.tape.largeOnly = !state.tape.largeOnly;
+    $('tapeLargeBtn').classList.toggle('primary', state.tape.largeOnly);
+    refreshTape();
+}
+
+// ==================== COMMAND PALETTE ====================
+const COMMANDS = [
+    { cmd: 'screen', label: 'Open Screener', icon: '📊', action: () => switchView('screener') },
+    { cmd: 'heatmap', label: 'Open Heatmap', icon: '🗺️', action: () => switchView('heatmap') },
+    { cmd: 'risk', label: 'Show my risk', icon: '⚠️', action: () => switchView('risk') },
+    { cmd: 'journal', label: 'Show trading journal', icon: '📓', action: () => switchView('journal') },
+    { cmd: 'overview', label: 'Show market overview', icon: '🌐', action: () => switchView('overview') },
+    { cmd: 'analyze', label: 'Analyze with AI', icon: '🤖', action: () => switchView('ai') }
+];
+
+function openPalette(initial) {
+    $('paletteOverlay').classList.add('open');
+    const inp = $('paletteInput');
+    inp.value = initial || '';
+    inp.focus();
+    runPalette(inp.value);
+}
+function closePalette() {
+    $('paletteOverlay').classList.remove('open');
+}
+
+async function runPalette(query) {
+    const q = query.trim();
+    const results = $('paletteResults');
+    if (!q) {
+        results.innerHTML = COMMANDS.map((c, i) => `
+            <div class="palette-item ${i===0?'selected':''}" data-i="${i}" onclick="runCommand(${i})">
+                <span class="icon">${c.icon}</span><span class="label">${c.label}</span>
+                <span class="sub">command</span>
+            </div>`).join('');
+        return;
+    }
+
+    // Check commands first
+    const cmdMatch = COMMANDS.filter(c => c.cmd.includes(q.toLowerCase()));
+    let html = cmdMatch.map((c, i) => `
+        <div class="palette-item ${i===0?'selected':''}" data-cmd="${c.cmd}" onclick="runCommandByCmd('${c.cmd}')">
+            <span class="icon">${c.icon}</span><span class="label">${c.label}</span><span class="sub">command</span>
+        </div>`).join('');
+
+    // Check screen shortcuts like "RSI<30" or "screen RSI<30"
+    const screenQuery = q.replace(/^screen\s+/i, '');
+    const screenMatch = screenQuery.match(/^([A-Za-z]+)\s*([<>]=?)\s*(\d+)/);
+    if (screenMatch) {
+        const [, field, op, val] = screenMatch;
+        html += `<div class="palette-item" onclick="runPaletteScreen('${field}','${op}',${val})">
+            <span class="icon">📊</span><span class="label">Screen: ${field} ${op} ${val}</span><span class="sub">screen</span></div>`;
+    }
+
+    // "analyze <symbol>" — analyze a specific symbol
+    const analyzeMatch = q.match(/^analyze\s+(\S+)/i);
+    if (analyzeMatch) {
+        const sym = analyzeMatch[1];
+        html += `<div class="palette-item" onclick="selectSymbolFromPalette('${sym}')">
+            <span class="icon">🤖</span><span class="label">Analyze ${sym} with AI</span><span class="sub">analyze</span></div>`;
+    }
+
+    // Search instruments
+    if (q.length >= 2) {
+        const r = await api('/api/v2/search?q=' + encodeURIComponent(q) + '&limit=6');
+        if (r.success) {
+            html += r.data.map(i => `
+                <div class="palette-item" onclick="selectSymbolFromPalette('${i.symbol}')">
+                    <span class="icon">📈</span><span class="label">${i.symbol}</span>
+                    <span class="sub">${i.exchange} · ${i.assetType}</span>
+                </div>`).join('');
+        }
+    }
+
+    results.innerHTML = html || '<div class="palette-empty">No matches — try "analyze RELIANCE" or "screen RSI<30"</div>';
+}
+
+function paletteKey(e) {
+    if (e.key === 'Escape') closePalette();
+    if (e.key === 'Enter') {
+        const sel = $('paletteResults').querySelector('.palette-item.selected, .palette-item');
+        if (sel) {
+            if (sel.onclick) { closePalette(); sel.click(); }
+            else { const q = $('paletteInput').value; if (q.startsWith('analyze ')) { selectSymbol(q.replace('analyze ','').trim()); closePalette(); } }
+        }
+    }
+}
+function runCommand(i) { closePalette(); COMMANDS[i].action(); }
+function runCommandByCmd(cmd) { closePalette(); COMMANDS.find(c => c.cmd === cmd).action(); }
+async function runPaletteScreen(field, op, val) {
+    closePalette();
+    state.filters = [{ field, operator: op, value: val }];
+    switchView('screener');
+    setTimeout(() => runScreen(), 300);
+}
+function selectSymbolFromPalette(symbol) { closePalette(); selectSymbol(symbol); }
+
+// ==================== SYMBOL SELECT ====================
+function selectSymbol(symbol) {
+    state.selectedSymbol = symbol;
+    $('searchInput').value = symbol;
+    analyzeSymbol(symbol);
+    switchView('ai');
+}
+
+// ==================== INIT ====================
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); }
+    if (e.key === 'Escape') closePalette();
+});
+
+(async function init() {
+    refreshStatus();
+    loadWatchlist();
+    switchView('overview');
+    refreshTape();
+    // Poll
+    setInterval(refreshQuotes, 5000);
+    setInterval(refreshTape, 4000);
+    setInterval(refreshStatus, 30000);
+})();
+</script>
+</body>
+</html>

@@ -6,7 +6,9 @@
     "scripts": {
         "start": "node server.js",
         "dev": "nodemon server.js",
-        "dev-no-db": "nodemon server-no-db.js"
+        "dev-no-db": "nodemon server-no-db.js",
+        "start:v2": "node server-v2.js",
+        "dev:v2": "nodemon server-v2.js"
     },
     "dependencies": {
         "axios": "^1.13.2",

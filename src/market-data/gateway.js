@@ -109,21 +109,31 @@ class MarketGateway extends EventEmitter {
 
         if (uncached.length === 0) return results;
 
-        // Find best provider that supports batch quotes
+        // Find best provider that supports batch quotes.
+        // A provider only "wins" if it covered ALL requested symbols;
+        // partial/empty results fall through to lower-priority providers
+        // (e.g. CoinGecko returns [] for stocks, so the demo provider
+        // must still get a chance to serve them).
+        const covered = new Set(results.map(q => q.symbol));
+        const remaining = () => uncached.filter(u => !covered.has(u.symbol));
+
         for (const provider of this.providers) {
+            const todo = remaining();
+            if (todo.length === 0) break;
             if (!provider.canMakeRequest()) continue;
             if (typeof provider.getQuotes !== 'function') continue;
 
             try {
                 this.metrics.providerCalls++;
-                const quotes = await provider.getQuotes(uncached);
+                const quotes = await provider.getQuotes(todo);
                 for (const quote of quotes) {
+                    if (!quote || !quote.symbol) continue;
+                    covered.add(quote.symbol);
                     const cacheKey = MarketCache.key('quote', quote.symbol, quote.exchange || 'default');
                     this.cache.set(cacheKey, quote, 'quote');
                     results.push(quote);
                     this.emit('quote', quote);
                 }
-                break; // Success — don't try other providers
             } catch (error) {
                 this.metrics.fallbacks++;
             }

@@ -70,6 +70,14 @@ if (process.env.ALPHAVANTAGE_API_KEY) {
 // CoinGecko is always registered (free, no key needed)
 gateway.registerProvider(new CoinGeckoProvider());
 
+// Demo provider as last-resort fallback (clearly labeled DEMO DATA)
+// Only registered when no real market-data keys are configured
+if (isDemoMode) {
+    const DemoProvider = require('./src/market-data/providers/demo-provider');
+    gateway.registerProvider(new DemoProvider());
+    console.log('  ⚠️  Demo provider registered (all quotes labeled DEMO DATA)');
+}
+
 // ============================================
 // INSTRUMENT MASTER
 // ============================================
@@ -86,11 +94,73 @@ marketStream.start(server);
 console.log('  ✅ WebSocket server attached');
 
 // ============================================
+// PHASE 2+3: ANALYTICS ENGINES
+// ============================================
+console.log('\n🔄 Initializing Analytics Engines...');
+
+const ScreenerEngine = require('./src/engine/screener-engine');
+const SectorHeatmap = require('./src/engine/sector-heatmap');
+const MarketRegimeEngine = require('./src/engine/market-regime-engine');
+const TradeQualityEngine = require('./src/engine/trade-quality-engine');
+const RiskTerminal = require('./src/engine/risk-terminal');
+const MarketTape = require('./src/engine/market-tape');
+const createEngineRoutes = require('./src/api/engine-routes');
+
+const screener = new ScreenerEngine(instrumentMaster, gateway);
+const sectorHeatmap = new SectorHeatmap(instrumentMaster);
+const marketRegime = new MarketRegimeEngine();
+const tradeQuality = new TradeQualityEngine(marketRegime);
+const riskTerminal = new RiskTerminal();
+const marketTape = new MarketTape({ maxSize: 2000, largePrintThreshold: 100000 });
+
+// Phase 4-6 engines
+const TradingJournal = require('./src/engine/trading-journal');
+const BehavioralAnalytics = require('./src/engine/behavioral-analytics');
+const AICopilot = require('./src/engine/ai-copilot');
+const StrategyLab = require('./src/engine/strategy-lab');
+const createIntelligenceRoutes = require('./src/api/intelligence-routes');
+
+const journal = new TradingJournal();
+const behavioral = new BehavioralAnalytics();
+const aiCopilot = new AICopilot({ enabled: true }); // Falls back to rule-engine if Ollama is down
+const strategyLab = new StrategyLab(journal);
+
+// Feed WebSocket quotes into market tape (after tape is defined)
+marketStream.on('quote', (quote) => {
+    marketTape.add(quote);
+});
+
+console.log('  ✅ Screener Engine ready');
+console.log('  ✅ Sector Heatmap ready');
+console.log('  ✅ Market Regime Engine ready');
+console.log('  ✅ Trade Quality Engine ready');
+console.log('  ✅ Risk Terminal ready');
+console.log('  ✅ Market Tape ready');
+
+// ============================================
 // API ROUTES
 // ============================================
 
 // v2 Market API (new professional routes)
 app.use('/api/v2', createMarketRoutes(gateway, instrumentMaster, marketStream));
+
+// v2 Engine API (analytics, screener, heatmap, regime, risk, tape)
+app.use('/api/v2', createEngineRoutes({
+    screener,
+    heatmap: sectorHeatmap,
+    regime: marketRegime,
+    tradeQuality,
+    riskTerminal,
+    tape: marketTape
+}));
+
+// v2 Intelligence API (journal, behavioral, AI copilot, strategy lab)
+app.use('/api/v2', createIntelligenceRoutes({
+    journal,
+    behavioral,
+    aiCopilot,
+    strategyLab
+}));
 
 // ============================================
 // V1 COMPATIBILITY ROUTES (preserved from original)
@@ -307,12 +377,13 @@ function getAllDemoData() {
 // ============================================
 server.listen(PORT, () => {
     console.log(`\n✅ ========================================`);
-    console.log(`✅ ProTrader v2 Server`);
+    console.log(`✅ ProTrader v2 Server — Trading Intelligence OS`);
     console.log(`✅ http://localhost:${PORT}`);
     console.log(`✅ Mode: ${isDemoMode ? 'DEMO (no API keys)' : 'LIVE (providers active)'}`);
     console.log(`✅ WebSocket: ws://localhost:${PORT}/market/ws`);
     console.log(`✅ Market Gateway: ${gateway.getProviderHealth().length} providers`);
     console.log(`✅ Instrument Master: ${instrumentMaster.size} instruments`);
+    console.log(`✅ Engines: Screener | Heatmap | Regime | TradeQuality | Risk | Tape`);
     console.log(`✅ ========================================\n`);
 });
 

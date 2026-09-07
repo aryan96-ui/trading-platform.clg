@@ -190,6 +190,10 @@ class MarketStream extends EventEmitter {
      */
     broadcast(quote) {
         const symbol = quote.symbol;
+
+        // Emit on EventEmitter for server-side listeners (tape, analytics, etc.)
+        this.emit('quote', quote);
+
         const subs = this.subscriptions.get(symbol);
         if (!subs || subs.size === 0) return;
 

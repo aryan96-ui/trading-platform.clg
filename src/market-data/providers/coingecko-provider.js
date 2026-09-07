@@ -51,10 +51,14 @@ class CoinGeckoProvider extends BaseProvider {
 
     async getQuote(symbol, exchange) {
         if (!this.canMakeRequest()) throw new Error(`${this.name}: rate limit exceeded`);
+
+        // Only serve symbols in the known crypto universe — querying arbitrary
+        // strings returns garbage coins that would look like real data.
+        const coinId = SYMBOL_TO_ID[symbol];
+        if (!coinId) throw new Error(`${this.name}: ${symbol} is not a supported crypto symbol`);
         const start = Date.now();
 
         try {
-            const coinId = SYMBOL_TO_ID[symbol] || symbol.toLowerCase();
             const { data } = await this._throttledRequest(
                 `${this.baseUrl}/simple/price`,
                 {
@@ -99,9 +103,13 @@ class CoinGeckoProvider extends BaseProvider {
 
     async getQuotes(symbols) {
         if (!this.canMakeRequest()) throw new Error(`${this.name}: rate limit exceeded`);
+
+        // Only serve symbols in the known crypto universe
+        const validSymbols = symbols.filter(s => SYMBOL_TO_ID[s.symbol]);
+        if (validSymbols.length === 0) return [];
         const start = Date.now();
 
-        const coinIds = symbols.map(s => SYMBOL_TO_ID[s.symbol] || s.symbol.toLowerCase()).join(',');
+        const coinIds = validSymbols.map(s => SYMBOL_TO_ID[s.symbol]).join(',');
 
         try {
             const { data } = await this._throttledRequest(
@@ -116,8 +124,8 @@ class CoinGeckoProvider extends BaseProvider {
             );
 
             const results = [];
-            for (const { symbol } of symbols) {
-                const coinId = SYMBOL_TO_ID[symbol] || symbol.toLowerCase();
+            for (const { symbol } of validSymbols) {
+                const coinId = SYMBOL_TO_ID[symbol];
                 if (data[coinId]) {
                     const coin = data[coinId];
                     const price = coin.usd || 0;
