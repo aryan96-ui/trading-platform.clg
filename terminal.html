@@ -189,13 +189,95 @@ tr{transition:background .15s}
 @media(max-width:1100px){.panel-right{display:none}}
 @media(max-width:800px){.panel-left{display:none}}
 
-/* Loading animation */
+/* ===== LOADING SKELETONS ===== */
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-.loading{background:linear-gradient(90deg,var(--bg-elevated) 25%,var(--bg-hover) 50%,var(--bg-elevated) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-sm)}
+.skeleton{background:linear-gradient(90deg,var(--bg-elevated) 25%,var(--bg-hover) 50%,var(--bg-elevated) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-sm)}n.skeleton-text{height:12px;margin:6px 0;border-radius:4px}
+.skeleton-card{height:80px;border-radius:var(--radius)}
 
-/* Progress bar */
-.progress-bar{height:4px;background:var(--bg-hover);border-radius:2px;overflow:hidden;margin:4px 0}
-.progress-bar .fill{height:100%;border-radius:2px;transition:width .5s ease}
+/* ===== TOAST NOTIFICATIONS ===== */
+.toast-container{position:fixed;top:60px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-lg);pointer-events:auto;animation:slideIn .3s ease;max-width:360px;border-left:3px solid var(--blue)}
+.toast.success{border-left-color:var(--green)}
+.toast.error{border-left-color:var(--red)}
+.toast.warning{border-left-color:var(--orange)}
+.toast.info{border-left-color:var(--cyan)}
+.toast-icon{font-size:16px;flex-shrink:0}
+.toast-msg{font-size:12px;color:var(--text-primary);flex:1}
+.toast-close{cursor:pointer;color:var(--text-muted);font-size:14px;padding:4px;transition:color .2s}
+.toast-close:hover{color:var(--text-primary)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+/* ===== STATUS BAR ===== */
+.status-bar{position:fixed;bottom:32px;left:260px;right:340px;height:28px;background:var(--bg-surface);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 16px;font-size:11px;color:var(--text-muted);gap:16px;z-index:40}
+.status-bar .sep{width:1px;height:14px;background:var(--border)}
+.status-bar .item{display:flex;align-items:center;gap:4px}
+.status-bar .item .dot{width:5px;height:5px;border-radius:50%}
+
+/* ===== RESIZER ===== */
+.resizer{width:4px;cursor:col-resize;background:transparent;transition:background .2s;position:relative;z-index:10}
+.resizer:hover,.resizer.active{background:var(--blue)}
+.resizer::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:2px;height:20px;background:var(--border-accent);border-radius:1px;opacity:0;transition:opacity .2s}
+.resizer:hover::after{opacity:1}
+
+/* ===== KEYBOARD SHORTCUTS MODAL ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:150;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-surface);border:1px solid var(--border-accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:520px;max-height:70vh;overflow:hidden}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-header h3{font-size:14px;font-weight:600}
+.modal-close{cursor:pointer;color:var(--text-muted);font-size:18px;transition:color .2s;padding:4px 8px;border-radius:4px}
+.modal-close:hover{color:var(--text-primary);background:var(--bg-hover)}
+.modal-body{padding:16px 20px;overflow-y:auto;max-height:calc(70vh - 60px)}
+.shortcut-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.shortcut-row:last-child{border-bottom:none}
+.shortcut-keys{display:flex;gap:4px}
+.shortcut-key{background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);min-width:24px;text-align:center}
+
+/* ===== TOOLTIP ===== */
+.tooltip{position:relative}
+.tooltip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:6px;padding:6px 10px;font-size:11px;color:var(--text-primary);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;box-shadow:var(--shadow-md)}
+.tooltip:hover::after{opacity:1}
+
+/* ===== EMPTY STATE ===== */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+.empty-state .icon{font-size:48px;margin-bottom:16px;opacity:.3}
+.empty-state .title{font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px}
+.empty-state .desc{font-size:12px;color:var(--text-muted);max-width:300px;line-height:1.6}
+
+/* ===== CONFIRM DIALOG ===== */
+.confirm-dialog{background:var(--bg-surface);border:1px solid var(--border-accent);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-lg);width:400px;max-width:90vw}
+.confirm-dialog h3{font-size:16px;font-weight:600;margin-bottom:12px}
+.confirm-dialog p{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px}
+.confirm-actions{display:flex;gap:8px;justify-content:flex-end}
+
+/* ===== TABS (sub-navigation) ===== */
+.sub-tabs{display:flex;gap:2px;padding:8px 16px;background:var(--bg-surface);border-bottom:1px solid var(--border)}
+.sub-tab{padding:6px 14px;border-radius:var(--radius-sm);font-size:11px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all .2s}
+.sub-tab:hover{color:var(--text-primary);background:var(--bg-hover)}
+.sub-tab.active{color:var(--text-primary);background:var(--bg-elevated)}
+
+/* ===== PROGRESS INDICATOR ===== */
+.progress{height:3px;background:var(--bg-hover);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:2px;transition:width .3s ease}
+
+/* ===== CHIP / TAG ===== */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:10.5px;font-weight:500;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .2s}
+.chip:hover{border-color:var(--blue);color:var(--text-primary)}
+.chip.active{background:rgba(99,102,241,.12);border-color:var(--blue);color:var(--blue)}
+.chip .remove{margin-left:4px;cursor:pointer;opacity:.6;transition:opacity .2s}
+.chip .remove:hover{opacity:1}
+
+/* ===== DIVIDER ===== */
+.divider{height:1px;background:var(--border);margin:12px 0}
+
+/* ===== HIGHLIGHT (selected row) ===== */
+tr.selected td{background:rgba(99,102,241,.08) !important}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1100px){.panel-right{display:none}.status-bar{right:0}}
+@media(max-width:800px){.panel-left{display:none}.status-bar{left:0}}
+@media(max-width:600px){.nav-tabs{display:none}.topbar{gap:8px;padding:0 10px}}
 </style>
 </head>
 <body>
@@ -278,6 +360,9 @@ tr{transition:background .15s}
 
 <!-- ===== TICKER ===== -->
 <div class="ticker"><div class="ticker-track" id="ticker"></div></div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container"></div>
 
 <!-- ===== COMMAND PALETTE ===== -->
 <div class="palette-overlay" id="paletteOverlay" onclick="if(event.target===this)closePalette()">
@@ -1682,10 +1767,181 @@ async function loadChartData(symbol, interval) {
     ro.observe(container);
 }
 
+// ==================== TOAST NOTIFICATIONS ====================
+function showToast(msg, type = 'info', duration = 4000) {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || icons.info}</span>
+        <span class="toast-msg">${msg}</span>
+        <span class="toast-close" onclick="this.parentElement.style.animation='slideOut .3s ease forwards';setTimeout(()=>this.parentElement.remove(),300)">✕</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.animation = 'slideOut .3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, duration);
+}
+
+// ==================== KEYBOARD SHORTCUTS ====================
+const SHORTCUTS = [
+    { keys: ['Ctrl', 'K'], desc: 'Open command palette' },
+    { keys: ['Ctrl', '/'], desc: 'Show keyboard shortcuts' },
+    { keys: ['1-9'], desc: 'Switch to tab (1=Overview, 2=Chart...)' },
+    { keys: ['Esc'], desc: 'Close palette / modal' },
+    { keys: ['R'], desc: 'Refresh current view' },
+    { keys: ['S'], desc: 'Focus search' },
+];
+
+function openShortcuts() {
+    let overlay = document.querySelector('.modal-overlay.shortcuts');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'modal-overlay shortcuts';
+        overlay.innerHTML = `
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>⌨️ Keyboard Shortcuts</h3>
+                    <span class="modal-close" onclick="closeShortcuts()">✕</span>
+                </div>
+                <div class="modal-body">
+                    ${SHORTCUTS.map(s => `
+                        <div class="shortcut-row">
+                            <span style="font-size:12px">${s.desc}</span>
+                            <div class="shortcut-keys">${s.keys.map(k => `<span class="shortcut-key">${k}</span>`).join('+')}</div>
+                        </div>`).join('')}
+                </div>
+            </div>`;
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeShortcuts(); });
+        document.body.appendChild(overlay);
+    }
+    overlay.classList.add('open');
+}
+function closeShortcuts() {
+    const overlay = document.querySelector('.modal-overlay.shortcuts');
+    if (overlay) overlay.classList.remove('open');
+}
+
+// ==================== THEME TOGGLE ====================
+let isDark = true;
+function toggleTheme() {
+    isDark = !isDark;
+    const root = document.documentElement;
+    if (!isDark) {
+        root.style.setProperty('--bg-base', '#f0f2f5');
+        root.style.setProperty('--bg-surface', '#ffffff');
+        root.style.setProperty('--bg-elevated', '#f8f9fa');
+        root.style.setProperty('--bg-hover', '#e9ecef');
+        root.style.setProperty('--text-primary', '#1a1a2e');
+        root.style.setProperty('--text-secondary', '#6c757d');
+        root.style.setProperty('--text-muted', '#adb5bd');
+        root.style.setProperty('--border', '#dee2e6');
+        root.style.setProperty('--border-accent', '#ced4da');
+    } else {
+        root.style.setProperty('--bg-base', '#06080f');
+        root.style.setProperty('--bg-surface', '#0c1220');
+        root.style.setProperty('--bg-elevated', '#131b2e');
+        root.style.setProperty('--bg-hover', '#1a2540');
+        root.style.setProperty('--text-primary', '#e4e9f0');
+        root.style.setProperty('--text-secondary', '#7d8a9e');
+        root.style.setProperty('--text-muted', '#4a5568');
+        root.style.setProperty('--border', '#1a2332');
+        root.style.setProperty('--border-accent', '#253350');
+    }
+    showToast(isDark ? 'Dark theme activated' : 'Light theme activated', 'info', 2000);
+}
+
+// ==================== STATUS BAR ====================
+function renderStatusBar() {
+    let bar = document.querySelector('.status-bar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.className = 'status-bar';
+        document.body.appendChild(bar);
+    }
+    const now = new Date();
+    const time = now.toLocaleTimeString('en-US', { hour12: false });
+    const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const view = state.view || 'overview';
+    const instruments = state.instruments?.length || 0;
+    bar.innerHTML = `
+        <div class="item"><span class="dot" style="background:var(--green)"></span> Connected</div>
+        <div class="sep"></div>
+        <div class="item">View: <b style="color:var(--text-primary)">${view.toUpperCase()}</b></div>
+        <div class="sep"></div>
+        <div class="item">Instruments: <b style="color:var(--text-primary)">${instruments}</b></div>
+        <div class="sep"></div>
+        <div class="item">${date} ${time}</div>
+        <div style="margin-left:auto;display:flex;gap:12px;align-items:center">
+            <span class="item" style="cursor:pointer" onclick="openShortcuts()" title="Keyboard shortcuts">⌨️ Shortcuts</span>
+            <span class="item" style="cursor:pointer" onclick="toggleTheme()" title="Toggle theme">${isDark ? '🌙' : '☀️'} Theme</span>
+        </div>`;
+}
+
+// ==================== RESIZABLE PANELS ====================
+function initResizers() {
+    const main = document.querySelector('.main');
+    const left = document.querySelector('.panel-left');
+    const right = document.querySelector('.panel-right');
+    if (!main || !left || !right) return;
+
+    const resizers = [
+        { el: left, side: 'left', size: 260, min: 200, max: 400 },
+        { el: right, side: 'right', size: 340, min: 260, max: 500 }
+    ];
+
+    resizers.forEach(({ el, side, size: initSize, min, max }) => {
+        const resizer = document.createElement('div');
+        resizer.className = 'resizer';
+        el.insertAdjacentElement(side === 'left' ? 'afterend' : 'beforebegin', resizer);
+        el.style.width = initSize + 'px';
+        el.style.flexShrink = '0';
+
+        let startX, startW;
+        resizer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startX = e.clientX;
+            startW = el.offsetWidth;
+            resizer.classList.add('active');
+            const onMove = (e2) => {
+                const diff = side === 'left' ? e2.clientX - startX : startX - e2.clientX;
+                const newW = Math.min(max, Math.max(min, startW + diff));
+                el.style.width = newW + 'px';
+            };
+            const onUp = () => {
+                resizer.classList.remove('active');
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+    });
+}
+
 // ==================== INIT ====================
 document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); }
-    if (e.key === 'Escape') closePalette();
+    if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); openShortcuts(); }
+    if (e.key === 'Escape') { closePalette(); closeShortcuts(); }
+    if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault(); $('searchInput').focus(); }
+    if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault(); switchView(state.view); showToast('View refreshed', 'info', 1500); }
+    // Number keys 1-9 switch tabs
+    if (!e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
+        const views = ['overview','chart','screener','heatmap','signals','regime','behavior','risk','strategies'];
+        const num = parseInt(e.key);
+        if (num >= 1 && num <= views.length) { switchView(views[num-1]); }
+    }
 });
 
 (async function init() {
@@ -1693,10 +1949,13 @@ document.addEventListener('keydown', (e) => {
     loadWatchlist();
     switchView('overview');
     refreshTape();
+    renderStatusBar();
+    initResizers();
     // Poll
     setInterval(refreshQuotes, 5000);
     setInterval(refreshTape, 4000);
     setInterval(refreshStatus, 30000);
+    setInterval(renderStatusBar, 1000);
 })();
 </script>
 </body>
