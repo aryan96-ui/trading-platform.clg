@@ -5,162 +5,197 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ProTrader Terminal</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 :root {
-    --bg-base:#0a0e17; --bg-surface:#111827; --bg-elevated:#1a2235; --bg-hover:#243049;
-    --text-primary:#e8ecf1; --text-secondary:#8b95a5; --text-muted:#5a6474;
-    --green:#00c853; --red:#ff3d3d; --blue:#3b82f6; --purple:#8b5cf6; --orange:#f59e0b; --cyan:#06b6d4;
-    --border:#1e293b; --border-accent:#334155;
+    --bg-base:#06080f; --bg-surface:#0c1220; --bg-elevated:#131b2e; --bg-hover:#1a2540; --bg-active:#1e2d4d;
+    --text-primary:#e4e9f0; --text-secondary:#7d8a9e; --text-muted:#4a5568;
+    --green:#10b981; --red:#ef4444; --blue:#6366f1; --purple:#a78bfa; --orange:#f59e0b; --cyan:#22d3ee; --pink:#f472b6; --teal:#14b8a6;
+    --border:#1a2332; --border-accent:#253350; --border-glow:rgba(99,102,241,.2);
     --font-sans:'Inter',-apple-system,'Segoe UI',sans-serif; --font-mono:'JetBrains Mono',monospace;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.4); --shadow-md:0 4px 12px rgba(0,0,0,.5); --shadow-lg:0 8px 30px rgba(0,0,0,.6);
+    --glow-blue:0 0 20px rgba(99,102,241,.15); --glow-green:0 0 20px rgba(16,185,129,.15); --glow-red:0 0 20px rgba(239,68,68,.15);
+    --radius:8px; --radius-sm:6px; --radius-lg:12px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--font-sans);background:var(--bg-base);color:var(--text-primary);font-size:13px;overflow:hidden;height:100vh}
 a{color:inherit;text-decoration:none}
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-thumb{background:var(--border-accent);border-radius:4px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:var(--border-accent);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--blue)}
 ::-webkit-scrollbar-track{background:var(--bg-base)}
 
 /* ===== TOP BAR ===== */
-.topbar{display:flex;align-items:center;gap:12px;height:48px;padding:0 16px;background:var(--bg-surface);border-bottom:1px solid var(--border)}
-.logo{font-weight:700;font-size:15px;letter-spacing:.5px;white-space:nowrap}
-.logo span{color:var(--blue)}
-.search-box{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:7px 12px;cursor:pointer}
-.search-box:hover{border-color:var(--border-accent)}
+.topbar{display:flex;align-items:center;gap:12px;height:52px;padding:0 20px;background:linear-gradient(180deg,#0e1525 0%,var(--bg-surface) 100%);border-bottom:1px solid var(--border);position:relative;z-index:60}
+.topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--blue),var(--purple),var(--blue),transparent);opacity:.3}
+.logo{font-weight:800;font-size:16px;letter-spacing:1px;white-space:nowrap;text-shadow:0 0 20px rgba(99,102,241,.3)}
+.logo span{background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.search-box{flex:1;max-width:440px;display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:8px 14px;cursor:pointer;transition:all .2s}
+.search-box:hover{border-color:var(--blue);box-shadow:var(--glow-blue)}
 .search-box input{flex:1;background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-sans);font-size:13px}
-.kbd{margin-left:auto;background:var(--bg-hover);border:1px solid var(--border-accent);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--text-secondary);font-family:var(--font-mono)}
-.status-pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--bg-elevated);border:1px solid var(--border)}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted)}
-.status-dot.live{background:var(--green);box-shadow:0 0 6px var(--green)}
-.status-dot.demo{background:var(--orange);box-shadow:0 0 6px var(--orange)}
-.nav-tabs{display:flex;gap:4px;margin-left:8px}
-.nav-tab{padding:6px 12px;border-radius:5px;cursor:pointer;color:var(--text-secondary);font-size:12px;font-weight:500;transition:all .15s}
-.nav-tab:hover{color:var(--text-primary);background:var(--bg-hover)}
-.nav-tab.active{color:var(--text-primary);background:var(--bg-elevated);border-bottom:2px solid var(--blue)}
+.search-box input::placeholder{color:var(--text-muted)}
+.kbd{margin-left:auto;background:var(--bg-hover);border:1px solid var(--border-accent);border-radius:4px;padding:2px 8px;font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.status-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--bg-elevated);border:1px solid var(--border);transition:all .3s}
+.status-pill:hover{border-color:var(--border-accent)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);transition:all .3s}
+.status-dot.live{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
+.status-dot.demo{background:var(--orange);box-shadow:0 0 8px var(--orange);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.nav-tabs{display:flex;gap:2px;margin-left:8px;flex-wrap:wrap;flex:1}
+.nav-tab{padding:7px 13px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-muted);font-size:11.5px;font-weight:500;transition:all .2s;border:1px solid transparent;letter-spacing:.3px}
+.nav-tab:hover{color:var(--text-primary);background:var(--bg-hover);border-color:var(--border)}
+.nav-tab.active{color:#fff;background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(99,102,241,.08));border-color:rgba(99,102,241,.4);box-shadow:var(--glow-blue)}
 
 /* ===== MAIN LAYOUT ===== */
-.main{display:flex;height:calc(100vh - 48px)}
+.main{display:flex;height:calc(100vh - 52px)}
 .panel{background:var(--bg-surface);border-right:1px solid var(--border);overflow-y:auto}
-.panel-header{position:sticky;top:0;z-index:5;background:var(--bg-surface);padding:10px 14px;border-bottom:1px solid var(--border);font-weight:600;font-size:12px;letter-spacing:.5px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center}
-.panel-body{padding:10px}
+.panel-header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,var(--bg-surface) 0%,rgba(12,18,32,.95) 100%);padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:11px;letter-spacing:.8px;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(8px)}
+.panel-body{padding:12px}
 
 /* Left panel */
-.panel-left{width:260px;flex-shrink:0}
+.panel-left{width:260px;flex-shrink:0;background:linear-gradient(180deg,var(--bg-surface) 0%,#0a1020 100%)}
 /* Center panel */
 .panel-center{flex:1;overflow-y:auto;background:var(--bg-base)}
 /* Right panel */
-.panel-right{width:330px;flex-shrink:0;border-right:none}
+.panel-right{width:340px;flex-shrink:0;border-right:none;background:linear-gradient(180deg,var(--bg-surface) 0%,#0a1020 100%)}
 
 /* ===== COMPONENTS ===== */
-.section-title{font-size:11px;font-weight:600;letter-spacing:.8px;color:var(--text-muted);text-transform:uppercase;margin:14px 0 8px}
-.asset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
-.asset-btn{padding:7px;border-radius:6px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);font-size:11px;cursor:pointer;text-align:center;transition:all .15s}
-.asset-btn:hover{border-color:var(--blue);color:var(--text-primary)}
-.asset-btn.active{background:var(--blue-dim,rgba(59,130,246,.15));border-color:var(--blue);color:var(--text-primary)}
+.section-title{font-size:10.5px;font-weight:700;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';width:3px;height:12px;background:var(--blue);border-radius:2px}
+.asset-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.asset-btn{padding:9px;border-radius:var(--radius-sm);background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);font-size:11px;cursor:pointer;text-align:center;transition:all .2s;font-weight:500}
+.asset-btn:hover{border-color:var(--blue);color:var(--text-primary);background:var(--bg-hover);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.asset-btn.active{background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(99,102,241,.05));border-color:var(--blue);color:var(--text-primary);box-shadow:var(--glow-blue)}
 
-.watchlist-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background .15s}
-.watchlist-item:hover{background:var(--bg-hover)}
-.watchlist-item .sym{font-family:var(--font-mono);font-weight:600;font-size:12px}
+.watchlist-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;border:1px solid transparent}
+.watchlist-item:hover{background:var(--bg-hover);border-color:var(--border);transform:translateX(2px)}
+.watchlist-item .sym{font-family:var(--font-mono);font-weight:600;font-size:12px;color:var(--text-primary)}
 .watchlist-item .name{color:var(--text-muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .watchlist-item .px{font-family:var(--font-mono);font-size:12px}
 .watchlist-item .chg{font-family:var(--font-mono);font-size:11px;min-width:52px;text-align:right}
 .up{color:var(--green)}.down{color:var(--red)}
 
 /* Command palette */
-.palette-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
+.palette-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:14vh}
 .palette-overlay.open{display:flex}
-.palette{width:560px;max-height:60vh;background:var(--bg-surface);border:1px solid var(--border-accent);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column}
-.palette input{background:var(--bg-elevated);border:none;outline:none;color:var(--text-primary);padding:14px 16px;font-size:14px;border-radius:10px 10px 0 0;border-bottom:1px solid var(--border);font-family:var(--font-sans)}
-.palette-results{overflow-y:auto;padding:6px}
-.palette-item{padding:9px 14px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.palette{width:580px;max-height:60vh;background:var(--bg-surface);border:1px solid var(--border-accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg),0 0 60px rgba(99,102,241,.1);display:flex;flex-direction:column;overflow:hidden}
+.palette input{background:var(--bg-elevated);border:none;outline:none;color:var(--text-primary);padding:16px 18px;font-size:15px;border-bottom:1px solid var(--border);font-family:var(--font-sans)}
+.palette input::placeholder{color:var(--text-muted)}
+.palette-results{overflow-y:auto;padding:8px}
+.palette-item{padding:10px 14px;border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s}
 .palette-item:hover,.palette-item.selected{background:var(--bg-hover)}
-.palette-item .icon{color:var(--blue);font-size:14px;width:20px;text-align:center}
-.palette-item .label{font-weight:500}
+.palette-item .icon{color:var(--blue);font-size:14px;width:22px;text-align:center}
+.palette-item .label{font-weight:500;font-size:12.5px}
 .palette-item .sub{color:var(--text-muted);font-size:11px;margin-left:auto}
 .palette-empty{padding:20px;text-align:center;color:var(--text-muted)}
 
 /* Tables */
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;padding:7px 8px;color:var(--text-muted);font-weight:500;font-size:10px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);position:sticky;top:38px;background:var(--bg-surface);z-index:4}
-td{padding:7px 8px;border-bottom:1px solid var(--border-subtle,#162032);font-family:var(--font-mono);font-size:11.5px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+th{text-align:left;padding:10px 10px;color:var(--text-muted);font-weight:600;font-size:10px;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid var(--border);position:sticky;top:38px;background:var(--bg-surface);z-index:4}
+td{padding:9px 10px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:11.5px;transition:background .15s}
 tr:hover td{background:var(--bg-hover)}
+tr{transition:background .15s}
 
 /* Cards */
-.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px}
-.card h4{font-size:12px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.3px}
-.badge.green{background:rgba(0,200,83,.15);color:var(--green)}
-.badge.red{background:rgba(255,61,61,.15);color:var(--red)}
-.badge.blue{background:rgba(59,130,246,.15);color:var(--blue)}
-.badge.orange{background:rgba(245,158,11,.15);color:var(--orange)}
-.badge.purple{background:rgba(139,92,246,.15);color:var(--purple)}
+.card{background:linear-gradient(135deg,var(--bg-elevated),rgba(19,27,46,.8));border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;transition:all .2s;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border-accent),transparent)}
+.card:hover{border-color:var(--border-accent);box-shadow:var(--shadow-sm)}
+.card h4{font-size:12.5px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;color:var(--text-primary)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.badge.green{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.badge.red{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.badge.blue{background:rgba(99,102,241,.12);color:var(--blue);border:1px solid rgba(99,102,241,.2)}
+.badge.orange{background:rgba(245,158,11,.12);color:var(--orange);border:1px solid rgba(245,158,11,.2)}
+.badge.purple{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
 
-.metric-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border-subtle,#162032)}
+.metric-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)}
 .metric-row:last-child{border-bottom:none}
 .metric-label{color:var(--text-secondary);font-size:11px}
-.metric-value{font-family:var(--font-mono);font-size:12px}
+.metric-value{font-family:var(--font-mono);font-size:12px;font-weight:500}
 
 /* Heatmap */
-.heatmap{display:flex;flex-direction:column;gap:10px}
-.heat-sector{border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.heat-sector-head{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;cursor:pointer;font-weight:600;font-size:12px;transition:filter .15s}
-.heat-stocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:2px;padding:2px}
-.heat-stock{padding:8px 6px;text-align:center;border-radius:4px;cursor:pointer;font-size:10.5px}
-.heat-stock .s{font-weight:600;font-family:var(--font-mono)}
-.heat-stock .c{font-family:var(--font-mono);font-size:10px}
+.heatmap{display:flex;flex-direction:column;gap:12px}
+.heat-sector{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .2s}
+.heat-sector:hover{border-color:var(--border-accent);box-shadow:var(--shadow-sm)}
+.heat-sector-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;font-weight:600;font-size:12.5px;transition:all .2s}
+.heat-stocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:3px;padding:3px}
+.heat-stock{padding:10px 8px;text-align:center;border-radius:var(--radius-sm);cursor:pointer;font-size:10.5px;transition:all .2s;border:1px solid transparent}
+.heat-stock:hover{transform:scale(1.05);z-index:1;border-color:rgba(255,255,255,.1)}
+.heat-stock .s{font-weight:700;font-family:var(--font-mono);font-size:11px}
+.heat-stock .c{font-family:var(--font-mono);font-size:10px;margin-top:2px}
 
 /* Filter builder */
-.filter-row{display:flex;gap:6px;margin-bottom:8px;align-items:center}
-.filter-row select,.filter-row input{background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;color:var(--text-primary);padding:6px 8px;font-size:11.5px;outline:none;font-family:var(--font-sans)}
-.filter-row select:focus,.filter-row input:focus{border-color:var(--blue)}
-.filter-row input{width:70px}
-.btn{padding:7px 14px;border-radius:6px;border:1px solid var(--border-accent);background:var(--bg-elevated);color:var(--text-primary);cursor:pointer;font-size:11.5px;font-weight:500;transition:all .15s;font-family:var(--font-sans)}
-.btn:hover{border-color:var(--blue);background:var(--bg-hover)}
-.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
-.btn.primary:hover{background:#2f6fe0}
+.filter-row{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.filter-row select,.filter-row input{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:8px 10px;font-size:11.5px;outline:none;font-family:var(--font-sans);transition:border-color .2s}
+.filter-row select:focus,.filter-row input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(99,102,241,.15)}
+.filter-row input{width:80px}
+.btn{padding:8px 16px;border-radius:var(--radius-sm);border:1px solid var(--border-accent);background:var(--bg-elevated);color:var(--text-primary);cursor:pointer;font-size:11.5px;font-weight:500;transition:all .2s;font-family:var(--font-sans);position:relative;overflow:hidden}
+.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.05),transparent);opacity:0;transition:opacity .2s}
+.btn:hover{border-color:var(--blue);background:var(--bg-hover);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.btn:hover::before{opacity:1}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:linear-gradient(135deg,var(--blue),#4f46e5);border-color:var(--blue);color:#fff;box-shadow:var(--glow-blue)}
+.btn.primary:hover{background:linear-gradient(135deg,#5b5bd6,var(--blue));box-shadow:0 0 25px rgba(99,102,241,.3)}
 .btn.small{padding:4px 10px;font-size:10.5px}
 .btn.danger:hover{border-color:var(--red);color:var(--red)}
 
 /* AI panel */
-.ai-response{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px;white-space:pre-wrap;font-size:12px;line-height:1.6;margin-bottom:10px}
-.ai-evidence{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px}
-.ai-evidence h4{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px}
-.ev-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11.5px}
-.ev-row .k{color:var(--text-secondary)}
-.ev-row .v{font-family:var(--font-mono)}
+.ai-response{background:linear-gradient(135deg,var(--bg-elevated),rgba(19,27,46,.9));border:1px solid var(--border);border-radius:var(--radius);padding:14px;white-space:pre-wrap;font-size:12px;line-height:1.7;margin-bottom:12px;position:relative}
+.ai-response::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--purple),var(--cyan));border-radius:2px 2px 0 0;opacity:.6}
+.ai-evidence{background:linear-gradient(135deg,var(--bg-elevated),rgba(19,27,46,.8));border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative}
+.ai-evidence::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.ai-evidence h4{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700}
+.ev-row{display:flex;justify-content:space-between;padding:4px 0;font-size:11.5px;border-bottom:1px solid var(--border)}
+.ev-row:last-child{border-bottom:none}
+.ev-row .k{color:var(--text-secondary);font-weight:500}
+.ev-row .v{font-family:var(--font-mono);font-weight:500}
 
 /* Risk gauge */
-.gauge{display:flex;align-items:center;gap:14px;margin-bottom:8px}
-.gauge-ring{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0}
-.gauge-ring::before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--bg-elevated)}
-.gauge-num{position:relative;font-family:var(--font-mono);font-size:20px;font-weight:700}
-.gauge-num small{font-size:10px;color:var(--text-muted)}
+.gauge{display:flex;align-items:center;gap:16px;margin-bottom:10px}
+.gauge-ring{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;background:conic-gradient(var(--green) 0%,var(--orange) 50%,var(--red) 100%);padding:4px;animation:rotateGlow 3s linear infinite}
+@keyframes rotateGlow{0%{filter:drop-shadow(0 0 4px rgba(16,185,129,.3))}50%{filter:drop-shadow(0 0 8px rgba(245,158,11,.4))}100%{filter:drop-shadow(0 0 4px rgba(16,185,129,.3))}}
+.gauge-ring::before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--bg-elevated);z-index:1}
+.gauge-num{position:relative;z-index:2;font-family:var(--font-mono);font-size:22px;font-weight:800}
+.gauge-num small{font-size:10px;color:var(--text-muted);font-weight:500}
 .gauge-factors{flex:1}
-.factor-item{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11px}
-.factor-item .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.factor-item{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:11px}
+.factor-item .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px currentColor}
 .factor-item .sign{width:10px;text-align:center;font-weight:700}
 
 /* Tape */
-.tape-row{display:grid;grid-template-columns:70px 90px 1fr 52px;gap:6px;padding:4px 8px;font-family:var(--font-mono);font-size:11px;border-bottom:1px solid var(--border-subtle,#162032);align-items:center}
-.tape-row.large{background:rgba(245,158,11,.08)}
-.tape-row.anomaly{background:rgba(59,130,246,.08)}
-.tape-time{color:var(--text-muted)}
+.tape-row{display:grid;grid-template-columns:70px 90px 1fr 52px;gap:6px;padding:5px 10px;font-family:var(--font-mono);font-size:11px;border-bottom:1px solid var(--border);align-items:center;transition:background .15s}
+.tape-row:hover{background:var(--bg-hover)}
+.tape-row.large{background:rgba(245,158,11,.06);border-left:2px solid var(--orange)}
+.tape-row.anomaly{background:rgba(99,102,241,.06);border-left:2px solid var(--blue)}
+.tape-time{color:var(--text-muted);font-size:10.5px}
 .tape-px{font-weight:600}
 
 /* Ticker */
-.ticker{position:fixed;bottom:0;left:0;right:0;height:30px;background:var(--bg-surface);border-top:1px solid var(--border);display:flex;align-items:center;overflow:hidden;z-index:50}
-.ticker-track{display:flex;gap:28px;padding:0 16px;white-space:nowrap;animation:ticker 45s linear infinite}
+.ticker{position:fixed;bottom:0;left:0;right:0;height:32px;background:linear-gradient(180deg,var(--bg-surface),#080c18);border-top:1px solid var(--border);display:flex;align-items:center;overflow:hidden;z-index:50}
+.ticker::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--blue),transparent);opacity:.4}
+.ticker-track{display:flex;gap:32px;padding:0 20px;white-space:nowrap;animation:ticker 50s linear infinite}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.ticker-item{display:flex;gap:8px;font-family:var(--font-mono);font-size:11px;align-items:center}
+.ticker-item{display:flex;gap:8px;font-family:var(--font-mono);font-size:11px;align-items:center;transition:opacity .2s}
 
 /* Stats cards */
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px}
-.stat-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px}
-.stat-card .label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
-.stat-card .value{font-family:var(--font-mono);font-size:16px;font-weight:600;margin-top:3px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:linear-gradient(135deg,var(--bg-elevated),rgba(19,27,46,.6));border:1px solid var(--border);border-radius:var(--radius);padding:14px;transition:all .25s;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border-accent),transparent)}
+.stat-card:hover{border-color:var(--border-accent);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.stat-card .label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+.stat-card .value{font-family:var(--font-mono);font-size:18px;font-weight:700;margin-top:4px;background:linear-gradient(135deg,var(--text-primary),var(--text-secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
 .hidden{display:none!important}
 @media(max-width:1100px){.panel-right{display:none}}
 @media(max-width:800px){.panel-left{display:none}}
+
+/* Loading animation */
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.loading{background:linear-gradient(90deg,var(--bg-elevated) 25%,var(--bg-hover) 50%,var(--bg-elevated) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-sm)}
+
+/* Progress bar */
+.progress-bar{height:4px;background:var(--bg-hover);border-radius:2px;overflow:hidden;margin:4px 0}
+.progress-bar .fill{height:100%;border-radius:2px;transition:width .5s ease}
 </style>
 </head>
 <body>
@@ -169,18 +204,25 @@ tr:hover td{background:var(--bg-hover)}
 <div class="topbar">
     <div class="logo">PRO<span>TRADER</span></div>
     <div class="search-box" id="globalSearch">
-        <span>🔍</span>
-        <input id="searchInput" placeholder="Search any symbol or company..." onkeydown="handleSearchKey(event)">
-        <span class="kbd">Ctrl K</span>
+        <span style="font-size:14px">🔍</span>
+        <input id="searchInput" placeholder="Search symbol, company, or command..." onkeydown="handleSearchKey(event)">
+        <span class="kbd">Ctrl+K</span>
     </div>
     <div class="status-pill" id="statusPill"><span class="status-dot" id="statusDot"></span><span id="statusText">Connecting...</span></div>
     <div class="nav-tabs">
-        <div class="nav-tab active" data-view="overview" onclick="switchView('overview')">Overview</div>
-        <div class="nav-tab" data-view="screener" onclick="switchView('screener')">Screener</div>
-        <div class="nav-tab" data-view="heatmap" onclick="switchView('heatmap')">Heatmap</div>
-        <div class="nav-tab" data-view="risk" onclick="switchView('risk')">Risk</div>
-        <div class="nav-tab" data-view="ai" onclick="switchView('ai')">AI Copilot</div>
-        <div class="nav-tab" data-view="journal" onclick="switchView('journal')">Journal</div>
+        <div class="nav-tab active" data-view="overview" onclick="switchView('overview')">📊 Overview</div>
+        <div class="nav-tab" data-view="chart" onclick="switchView('chart')">📈 Chart</div>
+        <div class="nav-tab" data-view="screener" onclick="switchView('screener')">🔍 Screener</div>
+        <div class="nav-tab" data-view="heatmap" onclick="switchView('heatmap')">🗺️ Heatmap</div>
+        <div class="nav-tab" data-view="signals" onclick="switchView('signals')">📡 Signals</div>
+        <div class="nav-tab" data-view="regime" onclick="switchView('regime')">🌦️ Regime</div>
+        <div class="nav-tab" data-view="behavior" onclick="switchView('behavior')">🧠 Behavior</div>
+        <div class="nav-tab" data-view="risk" onclick="switchView('risk')">⚠️ Risk</div>
+        <div class="nav-tab" data-view="strategies" onclick="switchView('strategies')">🔬 Strategy Lab</div>
+        <div class="nav-tab" data-view="claims" onclick="switchView('claims')">🔎 Claims</div>
+        <div class="nav-tab" data-view="reviews" onclick="switchView('reviews')">📋 Reviews</div>
+        <div class="nav-tab" data-view="ai" onclick="switchView('ai')">🤖 AI Copilot</div>
+        <div class="nav-tab" data-view="journal" onclick="switchView('journal')">📓 Journal</div>
     </div>
 </div>
 
@@ -188,22 +230,23 @@ tr:hover td{background:var(--bg-hover)}
 <div class="main">
     <!-- LEFT: Watchlist + tools -->
     <div class="panel panel-left">
-        <div class="panel-header">MARKET UNIVERSE</div>
+        <div class="panel-header">⚡ MARKET UNIVERSE</div>
         <div class="panel-body">
             <div class="section-title">Asset Class</div>
             <div class="asset-grid" id="assetGrid">
-                <div class="asset-btn active" data-type="stock" onclick="setAssetType('stock')">Stocks</div>
-                <div class="asset-btn" data-type="crypto" onclick="setAssetType('crypto')">Crypto</div>
-                <div class="asset-btn" data-type="forex" onclick="setAssetType('forex')">Forex</div>
-                <div class="asset-btn" data-type="index" onclick="setAssetType('index')">Indices</div>
+                <div class="asset-btn active" data-type="stock" onclick="setAssetType('stock')">📈 Stocks</div>
+                <div class="asset-btn" data-type="crypto" onclick="setAssetType('crypto')">₿ Crypto</div>
+                <div class="asset-btn" data-type="forex" onclick="setAssetType('forex')">💱 Forex</div>
+                <div class="asset-btn" data-type="index" onclick="setAssetType('index')">📊 Indices</div>
             </div>
             <div class="section-title">Watchlist</div>
             <div id="watchlist"></div>
             <div class="section-title">Quick Actions</div>
-            <div style="display:flex;flex-direction:column;gap:6px">
-                <button class="btn small" onclick="openPalette('screen ')">📊 Screen market</button>
-                <button class="btn small" onclick="openPalette('analyze ')">🤖 Analyze symbol</button>
-                <button class="btn small" onclick="switchView('risk')">⚠️ Show my risk</button>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                <button class="btn" onclick="openPalette('screen ')" style="display:flex;align-items:center;gap:8px"><span>📊</span> Screen market</button>
+                <button class="btn" onclick="openPalette('analyze ')" style="display:flex;align-items:center;gap:8px"><span>🤖</span> Analyze symbol</button>
+                <button class="btn" onclick="switchView('risk')" style="display:flex;align-items:center;gap:8px"><span>⚠️</span> Show my risk</button>
+                <button class="btn" onclick="switchView('journal')" style="display:flex;align-items:center;gap:8px"><span>📓</span> Trade journal</button>
             </div>
         </div>
     </div>
@@ -213,7 +256,7 @@ tr:hover td{background:var(--bg-hover)}
 
     <!-- RIGHT: AI + detail -->
     <div class="panel panel-right">
-        <div class="panel-header">AI COPILOT <span class="badge blue" id="aiMode">rule-engine</span></div>
+        <div class="panel-header">🤖 AI COPILOT <span class="badge blue" id="aiMode">rule-engine</span></div>
         <div class="panel-body">
             <div class="card">
                 <h4>🎯 <span id="aiSymbol">Select a symbol</span></h4>
@@ -222,7 +265,7 @@ tr:hover td{background:var(--bg-hover)}
             </div>
             <div class="card">
                 <h4>📡 MARKET TAPE <span class="badge" id="tapePauseBadge" style="display:none">paused</span></h4>
-                <div style="display:flex;gap:4px;margin-bottom:8px">
+                <div style="display:flex;gap:6px;margin-bottom:10px">
                     <button class="btn small" onclick="toggleTapePause()" id="tapePauseBtn">⏸ Pause</button>
                     <button class="btn small" onclick="toggleTapeAnomalies()" id="tapeAnomBtn">🔍 Anomalies</button>
                     <button class="btn small" onclick="toggleTapeLarge()" id="tapeLargeBtn">📣 Large</button>
@@ -367,8 +410,10 @@ function switchView(view) {
     const center = $('centerPanel');
     center.scrollTop = 0;
     const views = {
-        overview: renderOverview, screener: renderScreener, heatmap: renderHeatmap,
-        risk: renderRisk, ai: renderAI, journal: renderJournal
+        overview: renderOverview, chart: renderChart, screener: renderScreener, heatmap: renderHeatmap,
+        signals: renderSignals, regime: renderRegime, behavior: renderBehavior,
+        risk: renderRisk, strategies: renderStrategies, claims: renderClaims,
+        reviews: renderReviews, ai: renderAI, journal: renderJournal
     };
     (views[view] || renderOverview)();
 }
@@ -488,7 +533,7 @@ async function runScreen() {
             <thead><tr><th>Symbol</th><th>Company</th><th>Sector</th><th>Exchange</th></tr></thead>
             <tbody>
             ${r.data.map(i => `
-                <tr onclick="selectSymbol('${i.symbol}')" style="cursor:pointer">
+                <tr onclick="showScreenerChart('${i.symbol}')" style="cursor:pointer">
                     <td style="font-weight:600">${i.symbol}</td>
                     <td style="font-family:var(--font-sans)">${i.companyName}</td>
                     <td style="font-family:var(--font-sans)">${i.sector}</td>
@@ -496,7 +541,55 @@ async function runScreen() {
                 </tr>`).join('')}
             </tbody>
         </table>
-        <div style="color:var(--text-muted);font-size:11px;padding:8px 0">${r.data.length} results</div>`;
+        <div style="color:var(--text-muted);font-size:11px;padding:8px 0">${r.data.length} results — click a row to see chart</div>
+        <div id="screenerChartWrap" style="display:none">
+            <div class="section-title" id="screenerChartTitle" style="margin-top:12px"></div>
+            <div id="screenerChartContainer" style="height:360px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-surface)"></div>
+        </div>`;
+}
+
+let _screenerChart = null;
+let _screenerVolSeries = null;
+let _screenerCandleSeries = null;
+
+async function showScreenerChart(symbol) {
+    state.selectedSymbol = symbol;
+    $('searchInput').value = symbol;
+    const wrap = $('screenerChartWrap');
+    const title = $('screenerChartTitle');
+    const container = $('screenerChartContainer');
+    if (!wrap || !container) return;
+    wrap.style.display = 'block';
+    title.innerHTML = `Chart — <span style="font-family:var(--font-mono)">${symbol}</span>`;
+    if (_screenerChart) { try { _screenerChart.remove(); } catch(e){} _screenerChart = null; }
+    container.innerHTML = '<div style="padding:20px;color:var(--text-muted);text-align:center">Loading chart…</div>';
+    const r = await api('/api/v2/history/' + encodeURIComponent(symbol) + '?interval=1D&limit=120');
+    const candles = r.success && r.data && r.data.length ? r.data : [];
+    if (!candles.length) {
+        container.innerHTML = '<div style="padding:30px;color:var(--text-muted);text-align:center">DATA UNAVAILABLE — no history for ' + symbol + '</div>';
+        return;
+    }
+    container.innerHTML = '';
+    const chart = LightweightCharts.createChart(container, {
+        layout: { background: { type: 'solid', color: '#111827' }, textColor: '#8b95a5', fontSize: 11, fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' },
+        grid: { vertLines: { color: 'rgba(30,41,59,.5)' }, horzLines: { color: 'rgba(30,41,59,.5)' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        rightPriceScale: { borderColor: '#1e293b', scaleMargins: { top: 0.05, bottom: 0.22 } },
+        timeScale: { borderColor: '#1e293b', timeVisible: false, secondsVisible: false },
+        handleScroll: { vertTouchDrag: false }
+    });
+    _screenerChart = chart;
+    _screenerCandleSeries = chart.addCandlestickSeries({ upColor: '#00c853', downColor: '#ff3d3d', borderUpColor: '#00c853', borderDownColor: '#ff3d3d', wickUpColor: '#00c853', wickDownColor: '#ff3d3d' });
+    _screenerVolSeries = chart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: 'volume' });
+    chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+    const cc = candles.map(c => ({ time: Math.floor(new Date(c.timestamp).getTime() / 1000), open: +c.open, high: +c.high, low: +c.low, close: +c.close }));
+    const vv = cc.map(c => ({ time: c.time, value: c.volume || 0, color: c.close >= c.open ? 'rgba(0,200,83,.3)' : 'rgba(255,61,61,.3)' }));
+    _screenerCandleSeries.setData(cc);
+    _screenerVolSeries.setData(vv);
+    chart.timeScale().fitContent();
+    analyzeSymbol(symbol);
+    const ro = new ResizeObserver(() => chart.applyOptions({ width: container.clientWidth, height: container.clientHeight }));
+    ro.observe(container);
 }
 
 async function saveScreen() {
@@ -598,6 +691,622 @@ async function renderRisk() {
                 <div style="margin-top:8px;color:var(--text-secondary);font-size:12px">${d.recommendations.suggestion}</div>
             </div>
         </div>`;
+}
+
+// ==================== SIGNALS (ranked + conflict) ====================
+async function renderSignals() {
+    const p = $('centerPanel');
+    p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Loading signal radar...</div>';
+    // Build candidate signals from the actual current quote stream (labeled by feed)
+    const symbols = state.instruments.slice(0, 18).map(i => i.symbol);
+    const q = await api('/api/v2/quotes?symbols=' + symbols.join(','));
+    const quotes = q.success ? q.data : [];
+    const signals = quotes
+        .filter(x => x.price && x.changePercent !== undefined && Math.abs(x.changePercent) >= 0.15)
+        .map(x => ({
+            symbol: x.symbol,
+            type: x.changePercent > 0 ? 'momentum_breakout' : 'momentum_fade',
+            strategy: x.changePercent > 0 ? 'momentum_breakout' : 'mean_reversion',
+            direction: x.changePercent > 0 ? 'bullish' : 'bearish',
+            price: x.price,
+            changePercent: x.changePercent,
+            volumeRatio: x.volumeRatio || 1,
+            created: new Date().toISOString(),
+            evidenceFrom: x.dataQuality || x.source || 'live'
+        }));
+    if (!signals.length) {
+        p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">No qualifying moves right now — wait for the next quote refresh or lower the move threshold.</div>';
+        return;
+    }
+    const ctx = { regime: {}, watchlist: symbols.slice(0, 8), portfolioSymbols: state.quotes && Object.keys(state.quotes) };
+    const r = await api('/api/signals/ranked', 'POST', { signals, context: ctx });
+    if (!r.success) { p.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
+    const { ranked, alerts } = r.data;
+
+    const tierBadge = (t) => t === 'TOP_PRIORITY' ? '<span class="badge green">TOP</span>' : t === 'MEDIUM' ? '<span class="badge orange">MED</span>' : '<span class="badge blue">LOW</span>';
+    const bars = (s) => `
+        <div style="display:grid;grid-template-columns:120px 1fr 40px;gap:6px;font-size:10px;color:var(--text-muted);margin:2px 0">
+            ${['freshness','volumeConfirmation','regimeCompatibility','strategyMatch','liquidity','risk','relevance'].map(k => `
+                <div style="display:contents"><span>${k.replace(/([A-Z])/g,' $1').toLowerCase()}</span>
+                <div style="background:var(--bg-base);border-radius:2px;height:6px;align-self:center"><div style="height:6px;width:${Math.round(s.scoreBreakdown[k]||0)}%;border-radius:2px;background:${(s.scoreBreakdown[k]||0)>=60?'var(--green)':(s.scoreBreakdown[k]||0)>=35?'var(--orange)':'var(--red)'}"></div></div>
+                <span style="font-family:var(--font-mono);text-align:right">${Math.round(s.scoreBreakdown[k]||0)}</span></div>`).join('')}
+        </div>`;
+
+    // Conflict analysis for the top signal
+    const top = ranked[0];
+    const cq = quotes.find(x => x.symbol === top.symbol);
+    const conflictR = await api('/api/signals/conflict', 'POST', { factors: {
+        price: cq && cq.changePercent > 0 ? 'bullish' : cq && cq.changePercent < 0 ? 'bearish' : 'neutral',
+        volume: 'neutral', rsi: 'neutral', sector: 'neutral', market: 'neutral'
+    }});
+
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="stat-grid">
+                <div class="stat-card"><div class="label">Signals</div><div class="value">${ranked.length}</div></div>
+                <div class="stat-card"><div class="label">TOP Priority</div><div class="value" style="color:var(--green)">${alerts.counts.top}</div></div>
+                <div class="stat-card"><div class="label">MEDIUM</div><div class="value" style="color:var(--orange)">${alerts.counts.medium}</div></div>
+                <div class="stat-card"><div class="label">LOW</div><div class="value">${alerts.counts.low}</div></div>
+            </div>
+            <div class="section-title">Smart Alerts — ranked by quality, not direction</div>
+            ${['TOP_PRIORITY','MEDIUM','LOW'].map(tier => alerts.tiers[tier].length ? `
+                <div class="card" style="border-color:${tier==='TOP_PRIORITY'?'var(--green)':tier==='MEDIUM'?'var(--orange)':'var(--border)'}">
+                    <h4>${tierBadge(tier)} ${tier.replace('_',' ').toLowerCase()} — ${alerts.tiers[tier].length}</h4>
+                    ${alerts.tiers[tier].map(s => `
+                        <div style="border:1px solid var(--border);border-radius:6px;padding:8px;margin:6px 0">
+                            <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="selectSymbol('${s.symbol}')">
+                                <span style="font-family:var(--font-mono);font-weight:600">${s.symbol}</span>
+                                <span style="font-size:11px">${s.type} · ${s.direction}</span>
+                                <span style="font-family:var(--font-mono);font-size:13px;color:${s.direction==='bullish'?'var(--green)':'var(--red)'}">${sign(s.changePercent)}%</span>
+                                <span style="font-family:var(--font-mono)"><b>${s.qualityScore}</b>/100</span>
+                            </div>
+                            ${bars(s)}
+                            <div style="color:var(--text-secondary);font-size:10.5px;margin-top:3px">${s.reasons.join(' · ')}</div>
+                            <div style="color:var(--text-muted);font-size:10px;margin-top:2px">evidence: ${s.evidenceFrom}</div>
+                        </div>`).join('')}
+                </div>` : '').join('')}
+
+            ${conflictR.success && conflictR.data ? `
+            <div class="section-title">Signal Conflict — top signal factors</div>
+            <div class="card" style="border-color:${conflictR.data.hasConflict?'var(--orange)':'var(--border-accent)'}">
+                <div style="font-size:12px">${conflictR.data.conflict}</div>
+                <div class="metric-row"><span class="metric-label">Lean</span><span class="metric-value" style="color:${conflictR.data.lean.includes('bull')?'var(--green)':conflictR.data.lean.includes('bear')?'var(--red)':'var(--text-secondary)'}">${conflictR.data.lean}</span></div>
+                <div style="margin-top:6px;font-size:11px;color:var(--text-secondary)">${conflictR.data.recommendation}</div>
+                <div style="margin-top:6px;font-size:10px;color:var(--text-muted)">Volume/RSI/sector factors: DATA UNAVAILABLE in demo — shown neutral, never assumed.</div>
+            </div>` : ''}
+        </div>`;
+}
+
+// ==================== MARKET REGIME + STRATEGY MATRIX ====================
+async function renderRegime() {
+    const p = $('centerPanel');
+    p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Loading regime analysis...</div>';
+
+    const [matrixR] = await Promise.all([api('/api/strategies/matrix?email=demo@college.com')]);
+    const strategies = matrixR.success && matrixR.data ? matrixR.data.strategies || [] : [];
+    const allRegimes = ['TRENDING_UP','TRENDING_DOWN','RANGE_BOUND','HIGH_VOLATILITY','LOW_VOLATILITY'];
+
+    const regimeColor = (r) => r.includes('UP') ? 'var(--green)' : r.includes('DOWN') ? 'var(--red)' :
+        r.includes('VOLATIL') ? 'var(--orange)' : 'var(--blue)';
+
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="section-title">Market Regime Detection — assess a price series</div>
+            <div class="card" style="border-color:var(--border-accent)">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:11px;color:var(--text-secondary)">Series:</span>
+                    <select id="regimeSeries" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text-primary)">
+                        <option value="trend">Steady uptrend</option>
+                        <option value="range">Range-bound</option>
+                        <option value="volatile">High volatility</option>
+                        <option value="crash">Sharp downtrend</option>
+                    </select>
+                    <button class="btn primary small" onclick="runRegimeAssess()">▶ Assess Regime</button>
+                    <span style="font-size:10px;color:var(--text-muted)">Demo series — regime engine runs on the values above</span>
+                </div>
+                <div id="regimeResult" style="margin-top:10px"></div>
+            </div>
+
+            <div class="section-title">Strategy × Regime Matrix — your historical performance by regime</div>
+            <table>
+                <thead><tr><th>Strategy</th><th>N</th><th>Overall</th>${allRegimes.map(r => `<th style="color:${regimeColor(r)}">${r.replace('_',' ')}</th>`).join('')}</tr></thead>
+                <tbody>
+                ${strategies.map(s => `
+                    <tr>
+                        <td style="font-family:var(--font-sans);font-weight:500">${s.strategy}</td>
+                        <td>${s.tradeCount}</td>
+                        <td>${s.overallWinRate != null ? s.overallWinRate + '%' : '—'}</td>
+                        ${allRegimes.map(rg => {
+                            const cell = (s.cells || []).find(c => c.regime === rg);
+                            if (!cell) return '<td style="color:var(--text-muted)">—</td>';
+                            const c = cell.winRate >= 55 ? 'var(--green)' : cell.winRate >= 45 ? 'var(--orange)' : 'var(--red)';
+                            return `<td title="${cell.tradeCount} trades · expectancy ${cell.expectancyR}R">
+                                <span style="color:${c};font-weight:600">${cell.winRate}%</span>
+                                <span style="color:var(--text-muted);font-size:10px"> (${cell.tradeCount})</span></td>`;
+                        }).join('')}
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <div style="color:var(--text-muted);font-size:10px;margin-top:6px">${matrixR.success && matrixR.data.message || ''} Cells show win rate and sample size. Small samples are flagged, never overstated.</div>
+
+            <div class="section-title">Strategy Fit for the current regime</div>
+            <div class="card">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:11px;color:var(--text-secondary)">Regime:</span>
+                    <select id="assessRegime">${allRegimes.map(r => `<option>${r}</option>`).join('')}</select>
+                    <span style="font-size:11px;color:var(--text-secondary)">Strategy:</span>
+                    <select id="assessStrategy">${strategies.map(s => `<option>${s.strategy}</option>`).join('') || '<option>momentum_breakout</option>'}</select>
+                    <button class="btn primary small" onclick="runMatrixAssess()">▶ Assess Fit</button>
+                </div>
+                <div id="matrixAssessResult" style="margin-top:10px"></div>
+            </div>
+        </div>`;
+}
+
+async function runRegimeAssess() {
+    const el = $('regimeResult');
+    const kind = $('regimeSeries').value;
+    const prices = [];
+    let v = 100;
+    const n = 90;
+    for (let i = 0; i < n; i++) {
+        if (kind === 'trend') v *= 1.004 + (Math.random() - 0.5) * 0.006;
+        else if (kind === 'range') v *= 1 + (Math.random() - 0.5) * 0.008;
+        else if (kind === 'volatile') v *= 1 + (Math.random() - 0.5) * 0.035;
+        else if (kind === 'crash') v *= 0.992 + (Math.random() - 0.5) * 0.006;
+        prices.push(parseFloat(v.toFixed(2)));
+    }
+    el.innerHTML = '<div style="color:var(--text-secondary)">Assessing...</div>';
+    const r = await api('/api/market/regime/assess', 'POST', { prices, symbol: 'DEMO-SERIES' });
+    if (!r.success) { el.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
+    const d = r.data;
+    const ev = d.evidence || {};
+    el.innerHTML = `
+        <div class="ai-evidence">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <div><span style="font-weight:700;font-size:14px">${d.regime}</span>
+                    ${d.sub ? ` <span class="badge blue">${d.sub}</span>` : ''}
+                </div>
+                <span style="font-family:var(--font-mono);font-size:12px">confidence ${Math.round(d.confidence*100)}%</span>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">Evidence:</div>
+            ${ev.trend ? `<div class="ev-row"><span class="k">Trend</span><span class="v">${ev.trend.direction} · ADX ${(ev.trend.adx||0).toFixed(1)}</span></div>` : ''}
+            ${ev.volatility ? `<div class="ev-row"><span class="k">Volatility</span><span class="v">ATR% ${(ev.volatility.atrPercent||0).toFixed(2)} · percentile ${Math.round(ev.volatility.percentile||0)}</span></div>` : ''}
+            ${ev.momentum ? `<div class="ev-row"><span class="k">Momentum</span><span class="v">RSI ${(ev.momentum.rsi||0).toFixed(1)}</span></div>` : ''}
+            <div style="margin-top:6px;font-size:10px;color:var(--text-muted)">Analysis of the demo series above. Regime is context, not a prediction.</div>
+        </div>`;
+}
+
+async function runMatrixAssess() {
+    const el = $('matrixAssessResult');
+    const regime = $('assessRegime').value;
+    const strategy = $('assessStrategy').value;
+    const r = await api('/api/strategies/matrix/assess', 'POST', { strategy, currentRegime: regime, email: 'demo@college.com' });
+    if (!r.success) { el.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
+    const d = r.data;
+    const col = d.compatibility === 'HIGH' ? 'var(--green)' : d.compatibility === 'MODERATE' ? 'var(--orange)' : d.compatibility === 'LOW' ? 'var(--red)' : 'var(--text-secondary)';
+    el.innerHTML = `
+        <div class="card" style="border-color:${col};margin:0">
+            <div style="display:flex;justify-content:space-between">
+                <span style="font-size:11px;color:var(--text-secondary)">${strategy} × ${regime}</span>
+                <span style="font-weight:700;color:${col}">${d.compatibility}</span>
+            </div>
+            <div style="margin-top:6px;font-size:12px">${d.message}</div>
+            ${d.evidence ? `<div style="font-size:10px;color:var(--text-muted);margin-top:4px">${d.evidence}</div>` : ''}
+            ${d.bestRegime ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Best regime in your history: ${d.bestRegime}</div>` : ''}
+        </div>`;
+}
+
+// ==================== BEHAVIOR + GUARDRAILS ====================
+async function renderBehavior() {
+    const p = $('centerPanel');
+    p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Analyzing trading behavior...</div>';
+    const [behR, profR, grR] = await Promise.all([
+        api('/api/trader/behavior?email=demo@college.com'),
+        api('/api/trader/profile?email=demo@college.com'),
+        api('/api/guardrails/settings?email=demo@college.com')
+    ]);
+    const beh = behR.success ? behR.data : { behaviors: [], profile: null };
+    const prof = profR.success ? profR.data : null;
+    const settings = grR.success ? grR.data : null;
+
+    const sevBadge = (s) => s === 'HIGH' ? '<span class="badge red">HIGH</span>' : s === 'MODERATE' ? '<span class="badge orange">MODERATE</span>' : '<span class="badge blue">LOW</span>';
+
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="stat-grid">
+                <div class="stat-card"><div class="label">Trades Analyzed</div><div class="value">${beh.tradeCount || '—'}</div></div>
+                <div class="stat-card"><div class="label">Patterns</div><div class="value" style="color:${beh.behaviors.length ? 'var(--orange)' : 'var(--green)'}">${beh.behaviors.length}</div></div>
+                <div class="stat-card"><div class="label">Guardrails</div><div class="value" style="font-size:13px">${settings && settings.enabled ? 'ON' : 'OFF'}</div></div>
+            </div>
+
+            <div class="section-title">Behavior Alerts — observable patterns only</div>
+            ${beh.behaviors.length ? beh.behaviors.map(b => `
+                <div class="card" style="border-color:${b.severity==='HIGH'?'var(--red)':'var(--orange)'}">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <b style="font-size:12px">${b.label}</b> ${sevBadge(b.severity)}
+                    </div>
+                    <div style="font-size:11.5px;color:var(--text-secondary);margin-top:4px">${b.description}</div>
+                    ${(b.example||[]).length ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:4px">${b.example.join(' · ')}</div>` : ''}
+                    <div style="font-size:10.5px;color:var(--text-muted);margin-top:4px">→ ${b.recommendation}</div>
+                </div>`).join('') : '<div class="card">No significant patterns detected. Behavior engine reports only measurable trade actions.</div>'}
+            <div style="color:var(--text-muted);font-size:10px">Behavioral analysis is limited to observable trading activity — it is not a psychological assessment.</div>
+
+            <div class="section-title">Trader Profile</div>
+            ${prof ? `
+            <div class="card">
+                <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">${prof.summary || 'Profile forming — more trades needed.'}</div>
+                <div style="display:flex;gap:16px;flex-wrap:wrap">
+                    <div style="flex:1;min-width:200px">
+                        <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.5px">Best</div>
+                        ${(prof.best||[]).map(b => `<div style="font-size:11.5px;padding:2px 0">• ${b.key} — ${b.dimension} (${b.winRate}% win, ${b.totalPnl>0?'+':''}${b.totalPnl} P&L)</div>`).join('') || '<div style="font-size:11px;color:var(--text-muted)">Insufficient data</div>'}
+                    </div>
+                    <div style="flex:1;min-width:200px">
+                        <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.5px">Worst</div>
+                        ${(prof.worst||[]).map(b => `<div style="font-size:11.5px;padding:2px 0">• ${b.key} — ${b.dimension} (${b.winRate}% win, ${b.totalPnl>0?'+':''}${b.totalPnl} P&L)</div>`).join('') || '<div style="font-size:11px;color:var(--text-muted)">None flagged</div>'}
+                    </div>
+                </div>
+                ${prof.behaviorHighlights && prof.behaviorHighlights.length ? `<div style="margin-top:8px;font-size:11px;color:var(--orange)">${prof.behaviorHighlights.map(h => '• ' + h.text).join('<br>')}</div>` : ''}
+                ${(prof.strategies||[]).slice(0,3).map(s => `
+                    <div class="metric-row"><span class="metric-label">${s.key} (${s.tradeCount} trades)</span><span class="metric-value">${s.winRate}% win · ${s.profitFactor} PF · ${s.expectancy} exp</span></div>`).join('')}
+                <div style="font-size:9.5px;color:var(--text-muted);margin-top:6px">${prof.disclaimer || ''}</div>
+            </div>` : '<div class="card">Insufficient history for a profile.</div>'}
+
+            <div class="section-title">Guardrail Settings</div>
+            ${settings ? `
+            <div class="card">
+                <table>
+                    <tbody>
+                    ${[['maxDailyTrades','Max trades / day',settings.maxDailyTrades],['maxDailyLossPct','Max daily loss %',settings.maxDailyLossPct],['maxPositionSizePct','Max position %',settings.maxPositionSizePct],['maxRiskPerTradePct','Max risk / trade %',settings.maxRiskPerTradePct],['maxConsecutiveLosses','Max consecutive losses',settings.maxConsecutiveLosses],['cooldownAfterLossStreakMin','Cooldown after loss streak (min)',settings.cooldownAfterLossStreakMin]]
+                    .map(([k,l,v]) => `<tr><td style="font-family:var(--font-sans)">${l}</td><td style="text-align:right">${v}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>` : ''}
+
+            <div class="section-title">Discipline Check — controlled trading friction</div>
+            <div class="card" style="border-color:var(--orange)">
+                <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Simulate placing a large paper trade. If it trips a guardrail, ProTrader requires a reason before proceeding — and logs the override.</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                    <select id="guardSym">${['RELIANCE','TCS','HDFCBANK','INFY','ICICIBANK'].map(s => `<option>${s}</option>`).join('')}</select>
+                    <input id="guardQty" type="number" value="200" style="width:80px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text-primary)">
+                    <input id="guardEntry" type="number" value="2500" style="width:90px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text-primary)">
+                    <button class="btn small" onclick="runGuardrailCheck()">⛔ Check Discipline</button>
+                </div>
+                <div id="guardrailResult" style="margin-top:10px"></div>
+            </div>
+        </div>`;
+}
+
+async function runGuardrailCheck() {
+    const el = $('guardrailResult');
+    const jr = await api('/api/v2/journal/demo@college.com');
+    const recent = (jr.success ? jr.data : []).slice(-12).reverse();
+    const trade = {
+        symbol: $('guardSym').value,
+        direction: 'long',
+        quantity: parseInt($('guardQty').value) || 100,
+        entryPrice: parseFloat($('guardEntry').value) || 2500,
+        stopLoss: (parseFloat($('guardEntry').value) || 2500) * 0.97
+    };
+    const r = await api('/api/guardrails/check', 'POST', {
+        email: 'demo@college.com', trade,
+        context: { accountValue: 100000, recentTrades: recent.map(t => ({ pnl: t.pnl, quantity: t.quantity, entryPrice: t.entryPrice, closedAt: t.closedAt, timestamp: t.closedAt })) }
+    });
+    if (!r.success) { el.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
+    const d = r.data;
+    if (!d.overrideRequired && !d.warnings.length) {
+        el.innerHTML = '<div style="color:var(--green);font-size:12px">✅ Passed — no guardrail tripped for this position.</div>';
+        return;
+    }
+    el.innerHTML = `
+        <div style="border:1px solid var(--orange);border-radius:6px;padding:10px;background:rgba(245,158,11,.06)">
+            <b style="font-size:12px">DISCIPLINE CHECK</b>
+            ${d.blocks.map(b => `
+                <div style="margin-top:6px;font-size:11.5px;color:var(--red)">⛔ <b>${b.message}</b>
+                    <div style="color:var(--text-muted);font-size:10px">${b.evidence}</div></div>`).join('')}
+            ${d.warnings.map(w => `
+                <div style="margin-top:6px;font-size:11.5px;color:var(--orange)">⚠️ ${w.message}
+                    <div style="color:var(--text-muted);font-size:10px">${w.evidence}</div></div>`).join('')}
+            <div style="margin-top:10px;font-size:11px;color:var(--text-secondary)">Reason for this trade?</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+                ${d.reasonOptions.map((o, i) => `<button class="btn small" onclick="confirmGuardrailOverride('${o.replace(/\s+/g,'_')}', ${i})">${o}</button>`).join('')}
+                <button class="btn small danger" onclick="$('guardrailResult').innerHTML='<div style=color:var(--text-muted)>Trade cancelled — no override.</div>'">Cancel</button>
+            </div>
+        </div>`;
+    state.pendingGuardrail = { trade, blocks: d.blocks.map(b => b.type) };
+}
+
+async function confirmGuardrailOverride(reason) {
+    const el = $('guardrailResult');
+    if (!state.pendingGuardrail) return;
+    const { trade, blocks } = state.pendingGuardrail;
+    const r = await api('/api/guardrails/confirm', 'POST', {
+        email: 'demo@college.com', trade, blockIds: blocks,
+        reason: reason.replace(/_/g, ' '),
+        context: { accountValue: 100000 }
+    });
+    if (r.success) {
+        el.innerHTML = `<div style="color:var(--orange);font-size:12px">Override recorded. Reason: <b>${r.data.userResponse.reason}</b> · timestamp ${new Date(r.data.timestamp).toLocaleTimeString()}. All overrides are logged for post-trade review.</div>`;
+        state.pendingGuardrail = null;
+    } else {
+        el.innerHTML = `<div style="color:var(--red)">${r.error}</div>`;
+    }
+}
+
+// ==================== STRATEGY LAB (backtest) ====================
+async function renderStrategies() {
+    const p = $('centerPanel');
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="section-title">Strategy Validation Lab — statistical safeguards enforced</div>
+            <div class="card" style="border-color:var(--border-accent)">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:11px;color:var(--text-secondary)">Strategy:</span>
+                    <select id="btStrategy">
+                        <option value="sma_crossover">SMA Crossover</option>
+                        <option value="rsi">RSI Reversal</option>
+                        <option value="breakout">Breakout</option>
+                        <option value="bollinger">Bollinger</option>
+                    </select>
+                    <span style="font-size:11px;color:var(--text-secondary)">Fast:</span><input id="btFast" type="number" value="10" style="width:60px">
+                    <span style="font-size:11px;color:var(--text-secondary)">Slow:</span><input id="btSlow" type="number" value="30" style="width:60px">
+                    <button class="btn primary small" onclick="runBacktest()">▶ Run Backtest</button>
+                </div>
+                <div style="margin-top:6px;font-size:10px;color:var(--text-muted)">Demo price series (labeled). Signals fire at close, execute next open — no look-ahead. Costs: 10 bps + 5 bps slippage. Train/validation/out-of-sample split enforced.</div>
+                <div id="btResult" style="margin-top:10px"></div>
+            </div>
+
+            <div class="section-title">Robustness — parameter sensitivity</div>
+            <div class="card">
+                <button class="btn small" onclick="runSensitivity()">▶ Test parameter sensitivity (fast = 6..16)</button>
+                <div id="sensResult" style="margin-top:10px"></div>
+            </div>
+
+            <div class="section-title">Walk-Forward Test</div>
+            <div class="card">
+                <button class="btn small" onclick="runWalkForward()">▶ Run walk-forward (rolling train→OOS)</button>
+                <div id="wfResult" style="margin-top:10px"></div>
+            </div>
+        </div>`;
+}
+
+function genDemoCandles(n = 520) {
+    const c = []; let bp = 100; let dir = 1;
+    for (let i = 0; i < n; i++) {
+        if (i > 0 && i % 25 === 0) dir = -dir;
+        bp *= 1 + dir * 0.011 + (Math.random() - 0.5) * 0.004;
+        const o = bp, cl = bp * (1 + (Math.random() - 0.5) * 0.004);
+        c.push({ timestamp: new Date(Date.UTC(2026, 0, 1) + i * 86400000).toISOString(), open: o, high: Math.max(o, cl) * 1.008, low: Math.min(o, cl) * 0.992, close: cl });
+    }
+    return c;
+}
+
+async function runBacktest() {
+    const el = $('btResult');
+    const candles = genDemoCandles();
+    const r = await api('/api/strategies/backtest', 'POST', {
+        candles, strategy: $('btStrategy').value,
+        params: { fast: parseInt($('btFast').value) || 10, slow: parseInt($('btSlow').value) || 30 },
+        initialCapital: 100000
+    });
+    if (!r.success) { el.innerHTML = `<div style="color:var(--red)">${r.data.error || r.error}</div>`; return; }
+    const d = r.data;
+    const m = (seg) => seg.tradeCount ? `<span style="color:${seg.winRate>=55?'var(--green)':seg.winRate>=45?'var(--orange)':'var(--red)'}">${seg.winRate}%</span> win · ${seg.tradeCount} trades · PF ${seg.profitFactor} · exp ${seg.expectancy}` : '<span style="color:var(--text-muted)">no trades</span>';
+    el.innerHTML = `
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">${d.safeguards.lookAheadBias} ${d.safeguards.futureLeakage}</div>
+        <table>
+            <thead><tr><th>Segment</th><th>Result</th></tr></thead>
+            <tbody>
+                <tr><td style="font-family:var(--font-sans)">Training</td><td>${m(d.segments.training)}</td></tr>
+                <tr><td style="font-family:var(--font-sans)">Validation</td><td>${m(d.segments.validation)}</td></tr>
+                <tr><td style="font-family:var(--font-sans)">Out-of-sample</td><td>${m(d.segments.outOfSample)}</td></tr>
+            </tbody>
+        </table>
+        <div style="margin-top:8px;font-size:11px;color:${d.outOfSample.sampleSizeWarning.includes('NOT statistically') ? 'var(--orange)' : 'var(--green)'}">${d.outOfSample.sampleSizeWarning}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Costs/slippage included: ${d.safeguards.transactionCosts}</div>
+    `;
+}
+
+async function runSensitivity() {
+    const el = $('sensResult');
+    const candles = genDemoCandles();
+    const r = await api('/api/strategies/sensitivity', 'POST', { candles, strategy: $('btStrategy').value, paramName: 'fast', paramValues: [6, 8, 10, 12, 14, 16], baseParams: { slow: parseInt($('btSlow').value) || 30 } });
+    if (!r.success) { el.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
+    const d = r.data;
+    el.innerHTML = `
+        <table>
+            <thead><tr><th>fast</th><th>Trades</th><th>Win%</th><th>PF</th><th>Expectancy</th><th>MaxDD</th></tr></thead>
+            <tbody>${d.results.map(x => `<tr style="${x.fast === d.best.value ? 'outline:1px solid var(--green);outline-offset:-1px' : ''}"><td>${x.fast}</td><td>${x.tradeCount}</td><td>${x.winRate}</td><td>${x.profitFactor}</td><td>${x.expectancy}</td><td>${x.maxDrawdown}</td></tr>`).join('')}</tbody>
+        </table>
+        <div style="margin-top:8px;font-size:11.5px;color:${d.parameterSensitive ? 'var(--red)' : 'var(--green)'}">${d.warning}</div>
+        <div style="font-size:10px;color:var(--text-muted)">${d.note}</div>
+    `;
+}
+
+async function runWalkForward() {
+    const el = $('wfResult');
+    const candles = genDemoCandles(560);
+    const r = await api('/api/strategies/walk-forward', 'POST', { candles, strategy: $('btStrategy').value, params: { fast: parseInt($('btFast').value) || 10, slow: parseInt($('btSlow').value) || 30 }, windowSize: 180, stepSize: 45 });
+    if (!r.success) { el.innerHTML = `<div style="color:var(--red)">${r.data.error || r.error}</div>`; return; }
+    const d = r.data;
+    el.innerHTML = `
+        <div style="font-size:11px;color:var(--text-secondary)">${d.summary}</div>
+        <table style="margin-top:6px">
+            <thead><tr><th>Window</th><th>Train</th><th>OOS (test)</th></tr></thead>
+            <tbody>${d.windows.map(w => `<tr><td>${w.window}</td>
+                <td>${w.train.tradeCount} tr · ${w.train.winRate ?? '—'}% · PF ${w.train.profitFactor ?? '—'}</td>
+                <td>${w.test.tradeCount} tr · ${w.test.winRate ?? '—'}% · PF ${w.test.profitFactor ?? '—'}</td></tr>`).join('')}</tbody>
+        </table>
+        <div style="margin-top:6px;font-size:11px;color:var(--text-secondary)">Aggregate OOS: ${d.aggregateOutOfSample.sampleSize} trades · win ${d.aggregateOutOfSample.winRate}% · expectancy ${d.aggregateOutOfSample.expectancy} · ${d.aggregateOutOfSample.sampleSizeWarning}</div>
+        <div style="font-size:10px;color:var(--text-muted)">${d.safeguards}</div>
+    `;
+}
+
+// ==================== CLAIM VERIFICATION ====================
+async function renderClaims() {
+    const p = $('centerPanel');
+    const examples = [
+        'RELIANCE is experiencing unusual volume and breaking out',
+        'TCS is oversold right now and ready to bounce',
+        'HDFCBANK is in a strong uptrend with institutions buying'
+    ];
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="section-title">Finfluencer Claim Verification — evidence, not authority</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Paste any market claim. ProTrader extracts verifiable statements and compares them against available data. Claims that cannot be checked are reported as INSUFFICIENT DATA — never assumed.</div>
+            <div class="card" style="border-color:var(--border-accent)">
+                <textarea id="claimText" rows="2" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:8px;font-family:var(--font-sans);font-size:12px;resize:vertical"></textarea>
+                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:11px;color:var(--text-secondary)">Examples:</span>
+                    ${examples.map((e, i) => `<button class="btn small" onclick="loadClaim(${i})">${e.split(' ').slice(0,2).join(' ')}…</button>`).join('')}
+                    <button class="btn primary small" style="margin-left:auto" onclick="runClaimVerify()">🔎 Verify Claim</button>
+                </div>
+                <div id="claimResult" style="margin-top:12px"></div>
+            </div>
+            <div class="section-title">How verdicts work</div>
+            <div class="card">
+                <div style="font-size:11.5px;color:var(--text-secondary)">SUPPORTED = observed data agrees · PARTIALLY SUPPORTED = some evidence agrees · NOT SUPPORTED = data contradicts · INSUFFICIENT DATA = cannot be checked with current coverage.</div>
+                <div style="font-size:10.5px;color:var(--text-muted);margin-top:6px">Claim verification never declares a person fraudulent — it only grades market claims against evidence.</div>
+            </div>
+        </div>`;
+}
+
+function loadClaim(i) {
+    const examples = [
+        'RELIANCE is experiencing unusual volume and breaking out',
+        'TCS is oversold right now and ready to bounce',
+        'HDFCBANK is in a strong uptrend with institutions buying'
+    ];
+    $('claimText').value = examples[i];
+}
+
+async function runClaimVerify() {
+    const el = $('claimResult');
+    const text = $('claimText').value.trim();
+    if (!text) { el.innerHTML = '<div style="color:var(--orange)">Enter a claim first.</div>'; return; }
+    el.innerHTML = '<div style="color:var(--text-secondary)">Verifying against available data...</div>';
+    const m = text.match(/\b([A-Z]{2,6})\b/);
+    const symbol = m ? m[1] : 'RELIANCE';
+    const q = await api('/api/v2/quotes?symbols=' + symbol);
+    const quote = q.success && q.data.length ? q.data[0] : null;
+    const r = await api('/api/claims/verify', 'POST', {
+        claimText: text, symbol,
+        data: quote ? { price: quote.price, volume: quote.volume, avgVolume: quote.avgVolume, changePercent: quote.changePercent } : {}
+    });
+    if (!r.success) { el.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
+    const d = r.data;
+    const verdictBadge = (v) => v === 'SUPPORTED' ? '<span class="badge green">SUPPORTED</span>' : v === 'PARTIALLY SUPPORTED' ? '<span class="badge orange">PARTIAL</span>' : v === 'NOT SUPPORTED' ? '<span class="badge red">NOT SUPPORTED</span>' : '<span class="badge blue">INSUFFICIENT DATA</span>';
+    el.innerHTML = `
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">Claims extracted from: "${text}" · symbol: ${symbol}${quote ? ' · observed price ' + fmt(quote.price) + ' (' + quote.dataQuality + ')' : ''}</div>
+        ${d.claims.map(c => `
+            <div style="border:1px solid var(--border);border-radius:6px;padding:8px;margin:6px 0">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:12px"><b>${c.claim}</b></span> ${verdictBadge(c.verdict)}
+                </div>
+                ${c.evidence && c.evidence.length ? c.evidence.map(e => `<div style="font-size:10.5px;color:var(--text-muted);margin-top:2px">• ${e.interpretation}${e.value !== undefined && e.value !== null ? ' — ' + e.value : ''} (${e.source})</div>`).join('') : ''}
+                ${c.reason ? `<div style="font-size:10.5px;color:var(--text-secondary);margin-top:2px">${c.reason}</div>` : ''}
+            </div>`).join('')}
+    `;
+}
+
+// ==================== TRADE REVIEWS (post-trade learning) ====================
+async function renderReviews() {
+    const p = $('centerPanel');
+    const r = await api('/api/v2/journal/demo@college.com');
+    const trades = (r.success ? r.data : []).filter(t => t.exitPrice !== undefined).slice().reverse();
+    if (!trades.length) {
+        p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">No closed trades yet — open and close a trade in the Journal tab.</div>';
+        return;
+    }
+    const clsColor = (c) => c && c.includes('GOOD TRADE') ? 'var(--green)' : 'var(--red)';
+    p.innerHTML = `
+        <div style="padding:16px">
+            <div class="stat-grid">
+                <div class="stat-card"><div class="label">Reviews</div><div class="value">${trades.length}</div></div>
+                <div class="stat-card"><div class="label">Good decisions</div><div class="value" style="color:var(--green)">${trades.filter(t => t.review && t.review.decision && t.review.decision.label === 'GOOD TRADE').length}</div></div>
+                <div class="stat-card"><div class="label">Rule violations</div><div class="value" style="color:var(--red)">${trades.filter(t => t.review && t.review.decision && t.review.decision.label === 'BAD TRADE').length}</div></div>
+            </div>
+            <div class="section-title">Trade Reviews — decision quality is separate from P&L</div>
+            <div style="font-size:10.5px;color:var(--text-muted);margin-bottom:8px">A profitable trade can be a BAD decision (rules violated). A losing trade can be a GOOD decision (followed strategy, controlled risk). Click a trade for the full review.</div>
+            <table>
+                <thead><tr><th>Symbol</th><th>Decision</th><th>Result</th><th>P&L</th><th>R:R</th><th>Entry</th><th>Exit</th><th>Regime</th><th></th></tr></thead>
+                <tbody>
+                ${trades.slice(0, 40).map(t => {
+                    const review = t.review || {};
+                    const decision = review.decision || {};
+                    const result = review.result || {};
+                    return `<tr style="cursor:pointer" onclick="showTradeReview('${t.id}')">
+                        <td style="font-weight:600">${t.symbol}</td>
+                        <td style="color:${decision.label === 'GOOD TRADE' ? 'var(--green)' : 'var(--red)'}">${decision.label || '—'}</td>
+                        <td style="color:${t.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${result.label || (t.pnl >= 0 ? 'GOOD RESULT' : 'BAD RESULT')}</td>
+                        <td class="${cls(t.pnl)}">${sign(t.pnl)}</td>
+                        <td>${(t.riskReward||0).toFixed(1)}</td>
+                        <td>${t.entryPrice}</td>
+                        <td>${t.exitPrice}</td>
+                        <td style="font-size:10px">${t.marketRegime || '—'}</td>
+                        <td style="color:var(--blue)">→</td>
+                    </tr>`;
+                }).join('')}
+                </tbody>
+            </table>
+            <div id="tradeReviewDetail" style="margin-top:14px"></div>
+        </div>`;
+}
+
+async function showTradeReview(tradeId) {
+    const el = $('tradeReviewDetail');
+    el.innerHTML = '<div style="color:var(--text-secondary);padding:6px">Loading review...</div>';
+    const [revR, execR] = await Promise.all([
+        api('/api/trades/' + tradeId + '/review'),
+        api('/api/execution/' + tradeId)
+    ]);
+    if (!revR.success) { el.innerHTML = `<div style="color:var(--red)">${revR.error}</div>`; return; }
+    const t = revR.data;
+    const rev = t.review;
+    const exec = execR.success ? execR.data : null;
+    const q = (label, v) => v !== undefined && v !== null && v !== '' ? `<div class="ev-row"><span class="k">${label}</span><span class="v">${v}</span></div>` : '';
+    el.innerHTML = `
+        <div style="border:1px solid var(--border-accent);border-radius:8px;padding:12px;background:var(--bg-elevated)">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+                <b style="font-size:13px">${rev.symbol} — ${rev.classification}</b>
+                <span style="font-size:11px;color:var(--text-muted)">reviewed ${new Date(rev.timestamp).toLocaleString()}</span>
+            </div>
+            <div style="margin-top:10px">
+                <div class="ev-row"><span class="k">What happened</span><span class="v">${rev.sections.whatHappened}</span></div>
+                <div class="ev-row"><span class="k">Why it happened</span><span class="v">${rev.sections.whyItHappened}</span></div>
+                <div class="ev-row"><span class="k">Strategy followed</span><span class="v">${rev.sections.strategyFollowed}</span></div>
+                <div class="ev-row"><span class="k">Market regime</span><span class="v">${rev.sections.marketRegime}</span></div>
+                ${q('Entry quality', rev.entryQuality.score + '/100 ' + rev.entryQuality.quality)}
+                ${q('Exit quality', rev.exitQuality.score + '/100 ' + rev.exitQuality.quality)}
+                ${q('Risk quality', rev.riskQuality.score + '/100 ' + rev.riskQuality.quality)}
+                ${rev.relative && rev.relative.available ? q('vs benchmark', rev.relative.interpretation) : ''}
+            </div>
+            <div style="margin-top:10px;display:flex;gap:16px;flex-wrap:wrap">
+                <div style="flex:1;min-width:220px">
+                    <div style="font-size:10px;color:var(--green);text-transform:uppercase">Went well / repeat</div>
+                    ${(rev.sections.whatWentWell || []).map(x => `<div style="font-size:11px;padding:1px 0">• ${x}</div>`).join('') || '<div style="font-size:10px;color:var(--text-muted)">—</div>'}
+                    ${(rev.sections.shouldRepeat || []).map(x => `<div style="font-size:11px;padding:1px 0;color:var(--text-secondary)">↻ ${x}</div>`).join('')}
+                </div>
+                <div style="flex:1;min-width:220px">
+                    <div style="font-size:10px;color:var(--red);text-transform:uppercase">Went wrong / avoid</div>
+                    ${(rev.sections.whatWentWrong || []).map(x => `<div style="font-size:11px;padding:1px 0">• ${x}</div>`).join('') || '<div style="font-size:10px;color:var(--text-muted)">—</div>'}
+                    ${(rev.sections.shouldAvoid || []).map(x => `<div style="font-size:11px;padding:1px 0;color:var(--text-secondary)">✕ ${x}</div>`).join('')}
+                </div>
+            </div>
+            ${rev.aiLesson && rev.aiLesson.length ? `<div style="margin-top:10px;font-size:12px;color:var(--cyan)"><b>AI lesson:</b> ${rev.aiLesson.join(' ')}</div>` : ''}
+
+            ${exec ? `
+            <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:8px">
+                <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase">Execution quality ${exec.simulated ? '(simulated — paper trade)' : ''}</div>
+                <div class="ev-row"><span class="k">Entry slippage</span><span class="v">${exec.entrySlippage} (${exec.entrySlippageBps} bps)</span></div>
+                <div class="ev-row"><span class="k">Exit slippage</span><span class="v">${exec.exitSlippage} (${exec.exitSlippageBps} bps)</span></div>
+                <div class="ev-row"><span class="k">Est. total cost</span><span class="v">${fmt(exec.totalEstimatedCost)}</span></div>
+                <div class="ev-row"><span class="k">Quality</span><span class="v" style="color:${exec.quality.score >= 70 ? 'var(--green)' : exec.quality.score >= 45 ? 'var(--orange)' : 'var(--red)'}">${exec.quality.score}/100 — ${exec.quality.grade}</span></div>
+                <div style="font-size:10.5px;color:var(--text-secondary);margin-top:4px">${exec.explanation}</div>
+                <div style="font-size:9.5px;color:var(--text-muted);margin-top:3px">${exec.disclaimer}</div>
+            </div>` : ''}
+        </div>`;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ==================== AI COPILOT ====================
@@ -767,11 +1476,17 @@ function toggleTapeLarge() {
 
 // ==================== COMMAND PALETTE ====================
 const COMMANDS = [
+    { cmd: 'overview', label: 'Show market overview', icon: '🌐', action: () => switchView('overview') },
+    { cmd: 'signals', label: 'Show ranked signals', icon: '📡', action: () => switchView('signals') },
+    { cmd: 'regime', label: 'Show market regime', icon: '🌦️', action: () => switchView('regime') },
+    { cmd: 'behavior', label: 'Show my behavior profile', icon: '🧠', action: () => switchView('behavior') },
     { cmd: 'screen', label: 'Open Screener', icon: '📊', action: () => switchView('screener') },
     { cmd: 'heatmap', label: 'Open Heatmap', icon: '🗺️', action: () => switchView('heatmap') },
     { cmd: 'risk', label: 'Show my risk', icon: '⚠️', action: () => switchView('risk') },
+    { cmd: 'strategies', label: 'Open Strategy Lab', icon: '🔬', action: () => switchView('strategies') },
+    { cmd: 'claims', label: 'Verify a market claim', icon: '🔎', action: () => switchView('claims') },
+    { cmd: 'reviews', label: 'Show trade reviews', icon: '📋', action: () => switchView('reviews') },
     { cmd: 'journal', label: 'Show trading journal', icon: '📓', action: () => switchView('journal') },
-    { cmd: 'overview', label: 'Show market overview', icon: '🌐', action: () => switchView('overview') },
     { cmd: 'analyze', label: 'Analyze with AI', icon: '🤖', action: () => switchView('ai') }
 ];
 
@@ -861,8 +1576,110 @@ function selectSymbolFromPalette(symbol) { closePalette(); selectSymbol(symbol);
 function selectSymbol(symbol) {
     state.selectedSymbol = symbol;
     $('searchInput').value = symbol;
-    analyzeSymbol(symbol);
-    switchView('ai');
+    analyzeSymbol(symbol); // AI evidence updates in the right panel
+    switchView('chart');   // candlestick chart always opens in the center
+}
+
+// ==================== CHART (TradingView-style candles) ====================
+let _chartInstance = null;
+let _chartSymbol = null;
+let _chartInterval = '1D';
+async function renderChart() {
+    const p = $('centerPanel');
+    const symbol = state.selectedSymbol || 'RELIANCE';
+    p.innerHTML = `
+        <div style="padding:14px">
+            <div class="section-title">Chart — <span style="font-family:var(--font-mono)">${symbol}</span>
+                <span id="chartStatus" style="text-transform:none;letter-spacing:0;color:var(--text-muted)"></span></div>
+            <div style="display:flex;gap:4px;margin-bottom:8px;align-items:center">
+                ${['1m','5m','15m','1h','4h','1D','1W'].map(iv =>
+                    `<button class="btn small ${iv === _chartInterval ? 'primary' : ''}" onclick="setChartInterval('${iv}')">${iv}</button>`).join('')}
+                <div class="ohlc-bar" style="display:flex;gap:12px;margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)" id="chartOHLC"></div>
+            </div>
+            <div id="tvchart-container" style="height:calc(100vh - 210px);min-height:320px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-surface)"></div>
+        </div>`;
+    await loadChartData(symbol, _chartInterval);
+}
+
+function setChartInterval(iv) {
+    _chartInterval = iv;
+    const symbol = state.selectedSymbol || 'RELIANCE';
+    loadChartData(symbol, iv);
+    document.querySelectorAll('.btn.small').forEach(b => {
+        if (['1m','5m','15m','1h','4h','1D','1W'].includes(b.textContent.trim())) b.classList.toggle('primary', b.textContent.trim() === iv);
+    });
+}
+
+async function loadChartData(symbol, interval) {
+    _chartSymbol = symbol;
+    const st = $('chartStatus');
+    if (st) st.textContent = 'loading…';
+    const r = await api('/api/v2/history/' + encodeURIComponent(symbol) + '?interval=' + interval + '&limit=160');
+    const candles = r.success && r.data && r.data.length ? r.data : [];
+    if (st) st.textContent = candles.length ? `source: ${(candles[0].source||'demo').toUpperCase()}` : '';
+    const container = $('tvchart-container');
+    if (!container) return;
+
+    if (_chartInstance) {
+        try { _chartInstance.remove(); } catch (e) {}
+        _chartInstance = null;
+    }
+
+    if (!candles.length) {
+        container.innerHTML = '<div style="padding:30px;color:var(--text-muted);text-align:center">DATA UNAVAILABLE — no history for ' + symbol + ' at interval ' + interval + '</div>';
+        return;
+    }
+
+    const chart = LightweightCharts.createChart(container, {
+        layout: { background: { type: 'solid', color: '#111827' }, textColor: '#8b95a5', fontSize: 11, fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' },
+        grid: { vertLines: { color: 'rgba(30,41,59,.5)' }, horzLines: { color: 'rgba(30,41,59,.5)' } },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+            vertLine: { color: 'rgba(59,130,246,.4)', style: LightweightCharts.LineStyle.Dashed, labelBackgroundColor: '#3b82f6' },
+            horzLine: { color: 'rgba(59,130,246,.4)', style: LightweightCharts.LineStyle.Dashed, labelBackgroundColor: '#3b82f6' }
+        },
+        rightPriceScale: { borderColor: '#1e293b', scaleMargins: { top: 0.05, bottom: 0.22 } },
+        timeScale: { borderColor: '#1e293b', timeVisible: interval.includes('m') || interval === '1h' || interval === '4h', secondsVisible: false },
+        handleScroll: { vertTouchDrag: false }
+    });
+    _chartInstance = chart;
+
+    const candleSeries = chart.addCandlestickSeries({
+        upColor: '#00c853', downColor: '#ff3d3d', borderUpColor: '#00c853', borderDownColor: '#ff3d3d',
+        wickUpColor: '#00c853', wickDownColor: '#ff3d3d'
+    });
+    const volSeries = chart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: 'volume' });
+    chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+
+    const cc = candles.map(c => ({ time: Math.floor(new Date(c.timestamp).getTime() / 1000), open: +c.open, high: +c.high, low: +c.low, close: +c.close }));
+    const vv = cc.map(c => ({ time: c.time, value: c.volume || 0, color: c.close >= c.open ? 'rgba(0,200,83,.3)' : 'rgba(255,61,61,.3)' }));
+    candleSeries.setData(cc);
+    volSeries.setData(vv);
+    chart.timeScale().fitContent();
+
+    const ohlcEl = $('chartOHLC');
+    if (ohlcEl) ohlcEl.innerHTML = '';
+    const upd = (c) => {
+        if (!ohlcEl || !c) return;
+        const chg = c.close - c.open, pct = c.open > 0 ? (chg / c.open) * 100 : 0;
+        const col = chg >= 0 ? 'var(--green)' : 'var(--red)';
+        ohlcEl.innerHTML =
+            `<span>O <b style="color:var(--text-primary)">${c.open.toFixed(2)}</b></span>` +
+            `<span>H <b style="color:var(--green)">${c.high.toFixed(2)}</b></span>` +
+            `<span>L <b style="color:var(--red)">${c.low.toFixed(2)}</b></span>` +
+            `<span>C <b style="color:${col}">${c.close.toFixed(2)}</b></span>` +
+            `<span style="color:${col}">${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)</span>`;
+    };
+    upd(cc[cc.length - 1]);
+    chart.subscribeCrosshairMove((param) => {
+        if (param && param.time && param.seriesData) {
+            const d = param.seriesData.get(candleSeries);
+            if (d) upd(d);
+        } else upd(cc[cc.length - 1]);
+    });
+
+    const ro = new ResizeObserver(() => chart.applyOptions({ width: container.clientWidth, height: container.clientHeight }));
+    ro.observe(container);
 }
 
 // ==================== INIT ====================

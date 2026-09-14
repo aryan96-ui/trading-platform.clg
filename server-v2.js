@@ -125,6 +125,84 @@ const behavioral = new BehavioralAnalytics();
 const aiCopilot = new AICopilot({ enabled: true }); // Falls back to rule-engine if Ollama is down
 const strategyLab = new StrategyLab(journal);
 
+// ============================================
+// INTELLIGENCE LAYER (Modules 1-25)
+// ============================================
+const EventBus = require('./src/engine/event-bus');
+const EvidenceEngine = require('./src/engine/evidence-engine');
+const { SignalRankingEngine, SignalConflictEngine } = require('./src/engine/signal-engine');
+const { PreTradeRiskCheck, PortfolioHeat, PositionSizingEngine } = require('./src/engine/pre-trade-risk');
+const TradeThesisService = require('./src/engine/trade-thesis');
+const PostTradeLearningEngine = require('./src/engine/post-trade-learning');
+const ExecutionQualityAnalytics = require('./src/engine/execution-quality');
+const GuardrailEngine = require('./src/engine/guardrails');
+const TraderProfile = require('./src/engine/trader-profile');
+const StrategyRegimeMatrix = require('./src/engine/strategy-regime-matrix');
+const BacktestEngine = require('./src/engine/backtest-engine');
+const ClaimVerificationEngine = require('./src/engine/claim-verification');
+const createIntelligenceV2Routes = require('./src/api/intelligence-v2-routes');
+
+const eventBus = new EventBus();
+const signalRanking = new SignalRankingEngine();
+const signalConflict = new SignalConflictEngine();
+const preTradeRisk = new PreTradeRiskCheck();
+const portfolioHeat = new PortfolioHeat();
+const positionSizing = new PositionSizingEngine();
+const thesisService = new TradeThesisService();
+const postTradeLearning = new PostTradeLearningEngine();
+const executionQuality = new ExecutionQualityAnalytics();
+const guardrails = new GuardrailEngine();
+const traderProfile = new TraderProfile();
+const strategyMatrix = new StrategyRegimeMatrix();
+const backtestEngine = new BacktestEngine();
+const claimVerification = new ClaimVerificationEngine();
+
+// Event-bus wiring: auto-review closed trades + guardrail outcome logging
+journal.trades.set = ((original) => function (key, value) {
+    const result = original.call(this, key, value);
+    try { eventBus.tradeClosed(value[value.length - 1]); } catch (e) { /* best effort */ }
+    return result;
+})(journal.trades.set);
+
+// Post-trade review auto-generation on close (journal already generates base review)
+// Wrap closeTrade to enrich with regime + post-trade learning
+const originalCloseTrade = journal.closeTrade.bind(journal);
+journal.closeTrade = (email, tradeId, exitPrice, context = {}) => {
+    const closed = originalCloseTrade(email, tradeId, exitPrice);
+    if (closed) {
+        try {
+            const enriched = { ...closed, marketRegime: closed.marketRegime || context.regime?.regime || 'UNKNOWN' };
+            closed.review = postTradeLearning.generateReview(enriched, {
+                regime: context.regime,
+                benchmarkReturn: context.benchmarkReturn,
+                accountValue: context.accountValue,
+                strategyAdherence: context.strategyAdherence
+            });
+            // tradeClosed already emitted by the journal.trades.set patch above
+        } catch (e) {
+            console.error('[intelligence] review generation failed:', e.message);
+        }
+    }
+    return closed;
+};
+
+// Guardrail outcome logging on close
+const originalRecordOutcome = guardrails.recordOutcome.bind(guardrails);
+journal.closeTrade = ((orig) => function (email, tradeId, exitPrice, context = {}) {
+    const closed = orig.call(this, email, tradeId, exitPrice, context);
+    if (closed) {
+        try {
+            guardrails.recordOutcome(email, null, { pnl: closed.pnl, result: closed.pnl >= 0 ? 'win' : 'loss' });
+        } catch (e) { /* best effort */ }
+    }
+    return closed;
+})(journal.closeTrade);
+
+// Seed demo trade history AFTER all enrichment wraps are installed so seeded
+// trades flow through the full pipeline (events, enriched reviews, guardrail
+// outcome logs) like real paper trades. Clearly DEMO.
+seedDemoHistory(journal, { postTradeLearning });
+
 // Feed WebSocket quotes into market tape (after tape is defined)
 marketStream.on('quote', (quote) => {
     marketTape.add(quote);
@@ -160,6 +238,28 @@ app.use('/api/v2', createIntelligenceRoutes({
     behavioral,
     aiCopilot,
     strategyLab
+}));
+
+// v2 Intelligence Layer API (signals, claims, thesis, execution, backtest, guardrails, profile, regime, events)
+app.use('/api', createIntelligenceV2Routes({
+    eventBus,
+    signalRanking,
+    signalConflict,
+    preTradeRisk,
+    portfolioHeat,
+    positionSizing,
+    thesisService,
+    postTradeLearning,
+    executionQuality,
+    guardrails,
+    traderProfile,
+    strategyMatrix,
+    backtestEngine,
+    claimVerification,
+    regimeEngine: marketRegime,
+    journal,
+    behavioral,
+    aiCopilot
 }));
 
 // ============================================
@@ -327,6 +427,88 @@ app.get('/api/stocks', (req, res) => {
 // ============================================
 // DEMO DATA HELPERS
 // ============================================
+function seedDemoHistory(journal, svcs = {}) {
+    const email = 'demo@college.com';
+    const SYMBOLS = [
+        { symbol: 'RELIANCE', sector: 'Energy', base: 2450 },
+        { symbol: 'TCS', sector: 'IT', base: 3280 },
+        { symbol: 'INFY', sector: 'IT', base: 1520 },
+        { symbol: 'HDFCBANK', sector: 'Financial', base: 1645 },
+        { symbol: 'ICICIBANK', sector: 'Financial', base: 950 },
+        { symbol: 'BHARTIARTL', sector: 'Telecom', base: 890 },
+        { symbol: 'LT', sector: 'Infrastructure', base: 3350 },
+        { symbol: 'TATAMOTORS', sector: 'Auto', base: 680 },
+        { symbol: 'SUNPHARMA', sector: 'Healthcare', base: 1150 },
+        { symbol: 'TITAN', sector: 'Consumer', base: 3200 }
+    ];
+    const STRATEGIES = ['momentum_breakout', 'trend_following', 'mean_reversion', 'sma_crossover', 'breakout_pullback'];
+    const REGIMES = ['TRENDING_UP', 'RANGE_BOUND', 'HIGH_VOLATILITY', 'TRENDING_DOWN'];
+    const N = 64;
+
+    for (let i = 0; i < N; i++) {
+        const meta = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+        const strategy = STRATEGIES[i % STRATEGIES.length];
+        const regime = REGIMES[Math.floor(Math.random() * REGIMES.length)];
+        const base = meta.base * (1 + (Math.random() - 0.5) * 0.06);
+
+        // Bias some streaks so behavioral analytics has real patterns to find
+        const inLossStreak = i >= 8 && i <= 12; // 5 straight losses mid-history
+        const escalating = i >= 9 && i <= 12;   // sizes grow after those losses
+        const quantity = Math.round((5 + Math.random() * 12) * (escalating ? 2.4 : 1));
+        const stopLoss = base * (1 - 0.02 - Math.random() * 0.01);
+
+        // Direction/outcome engineered so the streak is losses, others mixed
+        const forceLoss = inLossStreak;
+        const pnlPct = forceLoss
+            ? -(0.008 + Math.random() * 0.012)
+            : (Math.random() - 0.42) * 0.03; // ~58% win bias outside streak
+
+        const durationH = 1 + Math.floor(Math.random() * 26);
+        // Spread the whole trade over the past: openedAt ~ (N-i) days ago,
+        // closedAt durationH hours later. closeTrade runs at ~now, so timestamps
+        // and the enriched review are corrected afterwards for realism.
+        const closedAt = new Date(Date.now() - (N - i) * 15 * 3600000 - Math.floor(Math.random() * 8) * 3600000);
+        const openedAt = new Date(closedAt.getTime() - durationH * 3600000);
+        const entryPrice = parseFloat(base.toFixed(2));
+        const exitPrice = parseFloat((entryPrice * (1 + pnlPct)).toFixed(2));
+
+        const trade = journal.openTrade(email, {
+            symbol: meta.symbol,
+            type: 'buy',
+            quantity,
+            entryPrice,
+            stopLoss,
+            target: parseFloat((entryPrice * 1.03).toFixed(2)),
+            strategy,
+            sector: meta.sector,
+            notes: 'Seeded demo trade',
+            marketRegime: regime
+        });
+        // Close through the real pipeline so events + guardrail logs fire.
+        if (trade) {
+            trade.marketRegime = regime;
+            const closed = journal.closeTrade(email, trade.id, exitPrice, {
+                regime: { regime, sub: pnlPct >= 0 ? 'BULLISH' : 'BEARISH' }
+            });
+            if (closed) {
+                // Correct timestamps + duration, regenerate the enriched review
+                // so every downstream engine sees realistic history.
+                closed.openedAt = openedAt.toISOString();
+                closed.closedAt = closedAt.toISOString();
+                closed.durationHours = parseFloat(durationH.toFixed(2));
+                if (svcs.postTradeLearning) {
+                    try {
+                        closed.review = svcs.postTradeLearning.generateReview(closed, {
+                            regime: { regime, sub: pnlPct >= 0 ? 'BULLISH' : 'BEARISH' }
+                        });
+                    } catch (e) { /* best effort */ }
+                }
+            }
+        }
+    }
+    console.log(`  ✅ Seeded ${N} demo trades for demo@college.com (labeled DEMO)`);
+}
+
 function getDemoStock(symbol) {
     const basePrices = {
         'RELIANCE': 2450, 'TCS': 3280, 'HDFC': 1645, 'INFY': 1520,
@@ -384,6 +566,7 @@ server.listen(PORT, () => {
     console.log(`✅ Market Gateway: ${gateway.getProviderHealth().length} providers`);
     console.log(`✅ Instrument Master: ${instrumentMaster.size} instruments`);
     console.log(`✅ Engines: Screener | Heatmap | Regime | TradeQuality | Risk | Tape`);
+    console.log(`✅ Intelligence: Signals | Claims | Thesis | Execution | Guardrails | Profile | Backtest | Matrix`);
     console.log(`✅ ========================================\n`);
 });
 

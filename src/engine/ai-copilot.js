@@ -261,8 +261,8 @@ class AICopilot {
     }
 
     _buildPrompt(context, evidence) {
-        return [
-            'You are ProTrader Copilot, a trading analysis assistant. You MUST base your analysis ONLY on the structured data provided. Do not invent prices, indicators, or events.',
+        const parts = [
+            'You are ProTrader Copilot, a trading analysis assistant. You MUST base your analysis ONLY on the structured data provided. Do not invent prices, indicators, events, or numbers.',
             '',
             'STRUCTURED MARKET CONTEXT:',
             JSON.stringify({
@@ -275,7 +275,26 @@ class AICopilot {
                 portfolio: evidence.portfolioContext,
                 risks: evidence.risks,
                 counterarguments: evidence.counterarguments
-            }, null, 2),
+            }, null, 2)
+        ];
+
+        // Module 23 — personalization: inject the user's own trading history
+        if (context.traderProfile && context.traderProfile.available) {
+            parts.push('', 'USER TRADING HISTORY (structured, verified):', JSON.stringify({
+                tradeCount: context.traderProfile.tradeCount,
+                summary: context.traderProfile.summary,
+                best: context.traderProfile.best,
+                worst: context.traderProfile.worst,
+                behaviorHighlights: context.traderProfile.behaviorHighlights
+            }, null, 2));
+        }
+
+        // Module 8 — signal quality context when available
+        if (context.signalQuality) {
+            parts.push('', 'SIGNAL QUALITY (computed):', JSON.stringify(context.signalQuality, null, 2));
+        }
+
+        parts.push(
             '',
             'TASK: In 150 words or less, explain:',
             '1. What is happening with this instrument?',
@@ -284,8 +303,11 @@ class AICopilot {
             '4. What would invalidate the current thesis?',
             '',
             'Use cautious language like "Technical conditions are supportive, but elevated volatility increases downside risk."',
+            'If user trading history is provided, relate the analysis to the user\'s historical results ONLY where the history supports it.',
             'Never give blind BUY/SELL commands. End with a data timestamp disclaimer.'
-        ].join('\n');
+        );
+
+        return parts.join('\n');
     }
 }
 
