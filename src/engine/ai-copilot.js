@@ -88,22 +88,28 @@ class AICopilot {
         const marketData = context.marketData || {};
         const portfolio = context.portfolio || {};
 
+        // A metric is reported only when it is a real finite number. Anything
+        // else (null, undefined, NaN) becomes null and surfaces as
+        // "unavailable" rather than a placeholder value.
+        const num = (value, decimals) =>
+            (typeof value === 'number' && Number.isFinite(value)) ? parseFloat(value.toFixed(decimals)) : null;
+
         const evidence = {
             indicatorsUsed: {
-                rsi: indicators.rsi !== undefined ? parseFloat(indicators.rsi.toFixed(2)) : null,
-                macdHistogram: indicators.macdHistogram !== undefined ? parseFloat(indicators.macdHistogram.toFixed(3)) : null,
-                ema20: indicators.ema20 !== undefined ? parseFloat(indicators.ema20.toFixed(2)) : null,
-                ema50: indicators.ema50 !== undefined ? parseFloat(indicators.ema50.toFixed(2)) : null,
-                ema200: indicators.ema200 !== undefined ? parseFloat(indicators.ema200.toFixed(2)) : null,
-                atr: indicators.atr !== undefined ? parseFloat(indicators.atr.toFixed(2)) : null,
-                adx: indicators.adx !== undefined ? parseFloat(indicators.adx.toFixed(1)) : null
+                rsi: num(indicators.rsi, 2),
+                macdHistogram: num(indicators.macdHistogram, 3),
+                ema20: num(indicators.ema20, 2),
+                ema50: num(indicators.ema50, 2),
+                ema200: num(indicators.ema200, 2),
+                atr: num(indicators.atr, 2),
+                adx: num(indicators.adx, 1)
             },
             marketConditions: {
                 regime: regime.regime || 'UNKNOWN',
                 regimeSub: regime.sub || '',
-                volatility: marketData.volatility !== undefined ? parseFloat((marketData.volatility * 100).toFixed(2)) : null,
-                relativeVolume: marketData.relativeVolume !== undefined ? parseFloat(marketData.relativeVolume.toFixed(2)) : null,
-                price: marketData.price !== undefined ? parseFloat(marketData.price.toFixed(2)) : null
+                volatility: num(marketData.volatility !== undefined && marketData.volatility !== null ? marketData.volatility * 100 : null, 2),
+                relativeVolume: num(marketData.relativeVolume, 2),
+                price: num(marketData.price, 2)
             },
             portfolioContext: {
                 totalValue: portfolio.totalValue,
@@ -175,30 +181,42 @@ class AICopilot {
         const ema200 = indicators.ema200;
 
         // Trend
-        if (price && ema200) {
+        if (typeof price === 'number' && Number.isFinite(price) && typeof ema200 === 'number' && Number.isFinite(ema200)) {
             if (price > ema200) { bullishScore += 2; reasons.push(`Price (${price.toFixed(2)}) is above 200 EMA (${ema200.toFixed(2)})`); }
             else { bearishScore += 2; reasons.push(`Price (${price.toFixed(2)}) is below 200 EMA (${ema200.toFixed(2)})`); }
         }
-        if (price && ema50) {
+        if (typeof price === 'number' && Number.isFinite(price) && typeof ema50 === 'number' && Number.isFinite(ema50)) {
             if (price > ema50) { bullishScore += 1; reasons.push('Price is above 50 EMA'); }
             else { bearishScore += 1; reasons.push('Price is below 50 EMA'); }
+        } else {
+            reasons.push('Insufficient data to evaluate trend vs moving averages.');
         }
+        // Metrics are only evaluated when they are real numbers — a missing
+        // indicator is reported as unavailable, never treated as zero/neutral.
+        const has = v => typeof v === 'number' && Number.isFinite(v);
+
         // Momentum
-        if (rsi !== undefined) {
+        if (has(rsi)) {
             if (rsi > 55 && rsi < 70) { bullishScore += 1; reasons.push(`RSI ${rsi.toFixed(1)} shows healthy momentum`); }
             else if (rsi >= 70) { bearishScore += 1; reasons.push(`RSI ${rsi.toFixed(1)} is overbought`); }
             else if (rsi < 35) { bearishScore += 1; reasons.push(`RSI ${rsi.toFixed(1)} is weak`); }
             else { reasons.push(`RSI ${rsi.toFixed(1)} is neutral`); }
+        } else {
+            reasons.push('Insufficient data to evaluate momentum (RSI).');
         }
         // MACD
-        if (macdH !== undefined) {
+        if (has(macdH)) {
             if (macdH > 0) { bullishScore += 1; reasons.push('MACD histogram is positive'); }
             else { bearishScore += 1; reasons.push('MACD histogram is negative'); }
+        } else {
+            reasons.push('Insufficient data to evaluate MACD.');
         }
         // Volume
-        if (marketData.relativeVolume !== undefined) {
+        if (has(marketData.relativeVolume)) {
             if (marketData.relativeVolume > 1.5) reasons.push(`Relative volume is ${marketData.relativeVolume.toFixed(1)}x — move is confirmed by volume`);
             if (marketData.relativeVolume > 1.5 && bearishScore > bullishScore) { bearishScore += 1; }
+        } else {
+            reasons.push('Insufficient data to evaluate relative volume.');
         }
         // Regime
         if (regime.regime === 'TRENDING' && regime.sub === 'BULLISH') { bullishScore += 1; reasons.push('Market regime is bullish'); }

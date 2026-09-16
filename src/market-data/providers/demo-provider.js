@@ -37,6 +37,21 @@ const BASE_PRICES = {
     'EURUSD': 1.08, 'GBPUSD': 1.27, 'USDJPY': 154
 };
 
+// Indices surfaced by getMarketOverview() — routeable through the gateway's
+// index asset class and priced from BASE_PRICES.
+const INDEX_UNIVERSE = [
+    { symbol: 'NIFTY', name: 'NIFTY 50', exchange: 'NSE' },
+    { symbol: 'NIFTY_BANK', name: 'NIFTY Bank', exchange: 'NSE' },
+    { symbol: 'SENSEX', name: 'SENSEX', exchange: 'BSE' },
+    { symbol: 'INDIA_VIX', name: 'India VIX', exchange: 'NSE' },
+    { symbol: 'SPX', name: 'S&P 500', exchange: 'NYSE' },
+    { symbol: 'IXIC', name: 'NASDAQ', exchange: 'NASDAQ' },
+    { symbol: 'DJI', name: 'Dow Jones', exchange: 'NYSE' },
+    { symbol: 'FTSE', name: 'FTSE 100', exchange: 'LSE' },
+    { symbol: 'DAX', name: 'DAX', exchange: 'XETRA' },
+    { symbol: 'NIKKEI', name: 'Nikkei 225', exchange: 'TSE' }
+];
+
 class DemoProvider extends BaseProvider {
     constructor(config = {}) {
         super('demo', {
@@ -61,21 +76,47 @@ class DemoProvider extends BaseProvider {
         const candles = [];
         const stepMs = { '1m': 60000, '5m': 300000, '15m': 900000, '30m': 1800000, '1h': 3600000, '4h': 14400000, '1D': 86400000, '1W': 604800000, '1M': 2592000000 };
         const step = stepMs[interval] || 86400000;
-        const now = Date.now();
 
-        let price = base * 0.9;
-        for (let i = limit - 1; i >= 0; i--) {
-            const drift = (Math.random() - 0.47) * 0.02;
-            price = price * (1 + drift);
-            const open = price;
-            const high = price * (1 + Math.random() * 0.012);
-            const low = price * (1 - Math.random() * 0.012);
-            const close = price * (1 + (Math.random() - 0.5) * 0.008);
+        // History is a pure function of (symbol, interval, bar index): the same
+        // instrument, exchange and limit always yield the SAME bars, and a
+        // shorter request returns a suffix of a longer one. Without this the
+        // chart, screener and AI each saw a different random walk for one
+        // symbol and disagreed on every indicator.
+        const CANON = 400; // canonical depth the walk is generated from
+        const hash01 = (index, salt) => {
+            let h = 2166136261;
+            for (const ch of `${symbol}:${interval}:${salt}`) {
+                h ^= ch.charCodeAt(0);
+                h = Math.imul(h, 16777619);
+            }
+            h = Math.imul(h ^ index, 2246822519);
+            h = Math.imul(h ^ (h >>> 13), 3266489917);
+            return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+        };
+
+        // Price path, anchored so the most recent bar closes at the base price
+        // (keeping the series consistent with live quotes for the symbol).
+        const path = [base * 0.85];
+        for (let i = 1; i < CANON; i++) {
+            path.push(path[i - 1] * (1 + (hash01(i, 'drift') - 0.47) * 0.02));
+        }
+        const scale = base / path[CANON - 1];
+        for (let i = 0; i < CANON; i++) path[i] *= scale;
+
+        const count = Math.max(1, Math.min(limit, CANON));
+        const endTs = Math.floor(Date.now() / step) * step;
+
+        for (let k = CANON - count; k < CANON; k++) {
+            const close = path[k];
+            const open = k > 0 ? path[k - 1] : close;
+            const spread = hash01(k, 'range') * 0.012;
+            const high = Math.max(open, close) * (1 + spread);
+            const low = Math.min(open, close) * (1 - spread);
             candles.push(Normalizer.normalizeCandle({
                 symbol, exchange: exchange || 'DEMO',
-                timestamp: new Date(now - i * step).toISOString(),
+                timestamp: new Date(endTs - (CANON - 1 - k) * step).toISOString(),
                 open, high, low, close,
-                volume: Math.floor(100000 + Math.random() * 5000000)
+                volume: Math.floor(100000 + hash01(k, 'volume') * 5000000)
             }, 'demo'));
         }
         return candles;
@@ -120,6 +161,24 @@ class DemoProvider extends BaseProvider {
             timestamp: new Date().toISOString(),
             dataQuality: 'DEMO'
         }, 'demo', this._guessType(symbol));
+    }
+
+    /**
+     * Major indices snapshot.
+     * Values are clearly labelled DEMO — never presented as live index prints.
+     */
+    async getMarketOverview() {
+        return INDEX_UNIVERSE.map(({ symbol, name, exchange }) => {
+            const quote = this._makeQuote(symbol, exchange);
+            return Normalizer.normalizeIndex({
+                symbol,
+                name,
+                price: quote.price,
+                change: quote.change,
+                changePercent: quote.changePercent,
+                volume: quote.volume
+            }, this.name);
+        });
     }
 
     _guessType(symbol) {

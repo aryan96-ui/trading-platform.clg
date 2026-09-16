@@ -85,6 +85,10 @@ console.log('🔄 Initializing Instrument Master...');
 const instrumentMaster = new InstrumentMaster();
 console.log(`  ✅ ${instrumentMaster.size} instruments loaded`);
 
+// Let the gateway route each request to providers that actually support the
+// symbol's asset class (prevents crypto-only providers stalling stock calls)
+gateway.setInstrumentMaster(instrumentMaster);
+
 // ============================================
 // WEBSOCKET MARKET STREAM
 // ============================================
@@ -117,6 +121,7 @@ const marketTape = new MarketTape({ maxSize: 2000, largePrintThreshold: 100000 }
 const TradingJournal = require('./src/engine/trading-journal');
 const BehavioralAnalytics = require('./src/engine/behavioral-analytics');
 const AICopilot = require('./src/engine/ai-copilot');
+const AIContextBuilder = require('./src/engine/ai-context-builder');
 const StrategyLab = require('./src/engine/strategy-lab');
 const createIntelligenceRoutes = require('./src/api/intelligence-routes');
 
@@ -232,12 +237,17 @@ app.use('/api/v2', createEngineRoutes({
     tape: marketTape
 }));
 
+// AI Context Builder — derives the AI's structured context from real market
+// data so the AI layer never receives (or invents) unverified numbers
+const aiContextBuilder = new AIContextBuilder({ gateway, instrumentMaster, regimeEngine: marketRegime });
+
 // v2 Intelligence API (journal, behavioral, AI copilot, strategy lab)
 app.use('/api/v2', createIntelligenceRoutes({
     journal,
     behavioral,
     aiCopilot,
-    strategyLab
+    strategyLab,
+    aiContextBuilder
 }));
 
 // v2 Intelligence Layer API (signals, claims, thesis, execution, backtest, guardrails, profile, regime, events)
@@ -445,29 +455,44 @@ function seedDemoHistory(journal, svcs = {}) {
     const REGIMES = ['TRENDING_UP', 'RANGE_BOUND', 'HIGH_VOLATILITY', 'TRENDING_DOWN'];
     const N = 64;
 
-    for (let i = 0; i < N; i++) {
-        const meta = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-        const strategy = STRATEGIES[i % STRATEGIES.length];
-        const regime = REGIMES[Math.floor(Math.random() * REGIMES.length)];
-        const base = meta.base * (1 + (Math.random() - 0.5) * 0.06);
+    // Deterministic PRNG (mulberry32) so the labeled demo dataset is identical
+    // on every boot. Analytics views then demonstrate the same, reproducible
+    // evidence instead of varying with luck.
+    let _s = 0x9e3779b9;
+    const rnd = () => {
+        _s = (_s + 0x6D2B79F5) | 0;
+        let t = _s;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
 
-        // Bias some streaks so behavioral analytics has real patterns to find
+    for (let i = 0; i < N; i++) {
+        const meta = SYMBOLS[Math.floor(rnd() * SYMBOLS.length)];
+        const strategy = STRATEGIES[i % STRATEGIES.length];
+        const regime = REGIMES[Math.floor(rnd() * REGIMES.length)];
+        const base = meta.base * (1 + (rnd() - 0.5) * 0.06);
+
+        // Engineered pattern: a run of losses mid-history with size ramping up
+        // after each one, so Behavioral Analytics has a real, discoverable
+        // pattern (position escalation after losses) to surface.
         const inLossStreak = i >= 8 && i <= 12; // 5 straight losses mid-history
-        const escalating = i >= 9 && i <= 12;   // sizes grow after those losses
-        const quantity = Math.round((5 + Math.random() * 12) * (escalating ? 2.4 : 1));
-        const stopLoss = base * (1 - 0.02 - Math.random() * 0.01);
+        const escalating = i >= 9 && i <= 12;   // sizes ramp after those losses
+        const escalationFactor = escalating ? 1.6 + (i - 8) * 1.1 : 1;
+        const quantity = Math.round((5 + rnd() * 12) * escalationFactor);
+        const stopLoss = base * (1 - 0.02 - rnd() * 0.01);
 
         // Direction/outcome engineered so the streak is losses, others mixed
         const forceLoss = inLossStreak;
         const pnlPct = forceLoss
-            ? -(0.008 + Math.random() * 0.012)
-            : (Math.random() - 0.42) * 0.03; // ~58% win bias outside streak
+            ? -(0.008 + rnd() * 0.012)
+            : (rnd() - 0.42) * 0.03; // ~58% win bias outside streak
 
-        const durationH = 1 + Math.floor(Math.random() * 26);
+        const durationH = 1 + Math.floor(rnd() * 26);
         // Spread the whole trade over the past: openedAt ~ (N-i) days ago,
         // closedAt durationH hours later. closeTrade runs at ~now, so timestamps
         // and the enriched review are corrected afterwards for realism.
-        const closedAt = new Date(Date.now() - (N - i) * 15 * 3600000 - Math.floor(Math.random() * 8) * 3600000);
+        const closedAt = new Date(Date.now() - (N - i) * 15 * 3600000 - Math.floor(rnd() * 8) * 3600000);
         const openedAt = new Date(closedAt.getTime() - durationH * 3600000);
         const entryPrice = parseFloat(base.toFixed(2));
         const exitPrice = parseFloat((entryPrice * (1 + pnlPct)).toFixed(2));

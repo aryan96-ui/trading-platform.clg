@@ -7,7 +7,7 @@
     <title>ProTrader - Multi-Asset Trading Platform</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/premium-panel.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -127,10 +127,8 @@
                 <div class="chart-header">
                     <div class="asset-info">
                         <h2 id="current-asset">RELIANCE</h2>
-                        <div class="price-info">
-                            <span class="current-price" id="current-price">₹2,450.25</span>
-                            <span class="price-change positive" id="price-change">+2.35%</span>
-                        </div>
+                        <span class="price-change" id="price-change">+2.35%</span>
+                        <span id="chart-provenance" class="badge" style="margin-left:8px;font-size:10px" title="data provenance">—</span>
                     </div>
                     <div class="chart-controls">
                         <button class="btn-time active" data-period="1D">1D</button>
@@ -139,9 +137,16 @@
                         <button class="btn-time" data-period="1Y">1Y</button>
                     </div>
                 </div>
-                <div class="chart-container">
-                    <canvas id="tradingChart"></canvas>
+                <!-- OHLC Data Bar -->
+                <div class="ohlc-bar" id="ohlc-bar">
+                    <div class="ohlc-item"><span class="ohlc-label">O</span> <span class="ohlc-val" id="ohlc-open">2,450.25</span></div>
+                    <div class="ohlc-item"><span class="ohlc-label">H</span> <span class="ohlc-val ohlc-high" id="ohlc-high">2,475.80</span></div>
+                    <div class="ohlc-item"><span class="ohlc-label">L</span> <span class="ohlc-val ohlc-low" id="ohlc-low">2,432.10</span></div>
+                    <div class="ohlc-item"><span class="ohlc-label">C</span> <span class="ohlc-val" id="ohlc-close">2,458.50</span></div>
+                    <div class="ohlc-item"><span class="ohlc-label">Chg</span> <span class="ohlc-val ohlc-positive" id="ohlc-change">+8.25 (+0.34%)</span></div>
+                    <div class="ohlc-item"><span class="ohlc-label">Vol</span> <span class="ohlc-val" id="ohlc-volume">2.4M</span></div>
                 </div>
+                <div class="chart-container" id="tvchart-container"></div>
             </div>
 
             <!-- Trading Panel -->

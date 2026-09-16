@@ -613,20 +613,46 @@ async function runScreen() {
     const r = await api('/api/v2/screen', 'POST', { filters: state.filters.filter(f => f.field) });
     if (!r.success) { resultsEl.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
     if (!r.data.length) { resultsEl.innerHTML = '<div style="color:var(--text-muted);padding:10px">No instruments match these filters.</div>'; return; }
+    // Show the technical values the screen actually filtered on. Missing
+    // metrics render as an explicit "—" (DATA UNAVAILABLE) rather than a
+    // plausible-looking number.
+    const hasTech = r.data.some(i => i._technicalData);
+    const techCell = (v, dp = 2) => (typeof v === 'number' && isFinite(v))
+        ? v.toFixed(dp)
+        : '<span title="DATA UNAVAILABLE" style="color:var(--text-muted)">—</span>';
+    const srcBadge = i => {
+        const p = i.dataProvenance || {};
+        const q = p.quality || '—';
+        const color = q === 'LIVE' || q === 'REALTIME' ? 'green' : (q === 'DEMO' ? 'orange' : 'blue');
+        return `<span class="badge ${color}" title="source: ${p.source || 'unknown'} · ${p.bars || 0} bars">${q}</span>`;
+    };
+
     resultsEl.innerHTML = `
         <table>
-            <thead><tr><th>Symbol</th><th>Company</th><th>Sector</th><th>Exchange</th></tr></thead>
+            <thead><tr>
+                <th>Symbol</th><th>Company</th><th>Sector</th>
+                ${hasTech ? '<th style="text-align:right">Price</th><th style="text-align:right">RSI</th><th style="text-align:right">1D %</th><th style="text-align:right">Rel Vol</th><th>Data</th>' : '<th>Exchange</th>'}
+            </tr></thead>
             <tbody>
-            ${r.data.map(i => `
+            ${r.data.map(i => {
+                const t = i._technicalData || {};
+                const chg = t.change1D;
+                return `
                 <tr onclick="showScreenerChart('${i.symbol}')" style="cursor:pointer">
                     <td style="font-weight:600">${i.symbol}</td>
                     <td style="font-family:var(--font-sans)">${i.companyName}</td>
                     <td style="font-family:var(--font-sans)">${i.sector}</td>
-                    <td>${i.exchange}</td>
-                </tr>`).join('')}
+                    ${hasTech ? `
+                        <td style="text-align:right">${techCell(t.price)}</td>
+                        <td style="text-align:right;color:${t.rsi > 70 ? 'var(--red)' : (t.rsi < 30 ? 'var(--green)' : 'var(--text-primary)')}">${techCell(t.rsi, 1)}</td>
+                        <td style="text-align:right" class="${typeof chg === 'number' ? cls(chg) : ''}">${typeof chg === 'number' ? sign(chg) + '%' : techCell(null)}</td>
+                        <td style="text-align:right">${typeof t.relativeVolume === 'number' ? t.relativeVolume.toFixed(2) + 'x' : techCell(null)}</td>
+                        <td>${srcBadge(i)}</td>` : `<td>${i.exchange}</td>`}
+                </tr>`;
+            }).join('')}
             </tbody>
         </table>
-        <div style="color:var(--text-muted);font-size:11px;padding:8px 0">${r.data.length} results — click a row to see chart</div>
+        <div style="color:var(--text-muted);font-size:11px;padding:8px 0">${r.data.length} results — click a row to see chart${hasTech ? ' · technicals computed from daily candles; — means the metric is unavailable' : ''}</div>
         <div id="screenerChartWrap" style="display:none">
             <div class="section-title" id="screenerChartTitle" style="margin-top:12px"></div>
             <div id="screenerChartContainer" style="height:360px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-surface)"></div>
@@ -1407,29 +1433,14 @@ async function analyzeSymbol(symbol) {
     $('aiResponse').innerHTML = '<div class="ai-response" style="color:var(--text-secondary)">Generating analysis...</div>';
     $('aiEvidence').innerHTML = '';
 
-    const context = {
-        symbol,
-        marketData: state.quotes[symbol] ? {
-            price: state.quotes[symbol].price,
-            relativeVolume: 1.5 + Math.random(),
-            volatility: 0.02 + Math.random() * 0.03
-        } : { price: 2450, relativeVolume: 1.5, volatility: 0.02 },
-        indicators: {
-            rsi: 35 + Math.random() * 40,
-            macdHistogram: (Math.random() - 0.4) * 4,
-            ema20: 2400 + Math.random() * 100,
-            ema50: 2350 + Math.random() * 120,
-            ema200: 2200 + Math.random() * 150,
-            atr: 30 + Math.random() * 30,
-            adx: 15 + Math.random() * 40
-        },
-        regime: { regime: 'TRENDING', sub: 'BULLISH' },
-        dataTimestamp: new Date().toISOString()
-    };
-
-    const r = await api('/api/v2/ai/analyze', 'POST', { context });
+    // Send the symbol only — the backend computes price, indicators and regime
+    // from real market data and tags their provenance. The frontend never
+    // supplies numbers the AI would then present as analysis.
+    const r = await api('/api/v2/ai/analyze', 'POST', { symbol });
     if (!r.success) { $('aiResponse').innerHTML = `<div class="ai-response" style="color:var(--red)">${r.error}</div>`; return; }
     const d = r.data;
+    const prov = d.dataProvenance || {};
+    const unavailable = d.unavailable || [];
 
     $('aiResponse').innerHTML = `<div class="ai-response">${d.explanation.replace(/\n/g, '<br>')}</div>`;
     $('aiMode').textContent = d.aiModel === 'rule-engine' ? 'rule-engine' : d.aiModel;
@@ -1449,7 +1460,10 @@ async function analyzeSymbol(symbol) {
             ${ev.risks.map(r => `<div style="font-size:11px;color:var(--orange)">• ${r}</div>`).join('')}
             <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">Counterarguments:</div>
             ${(ev.counterarguments.length ? ev.counterarguments : ['None flagged']).map(c => `<div style="font-size:11px;color:var(--text-secondary)">• ${c}</div>`).join('')}
-            <div style="margin-top:8px;font-size:10px;color:var(--text-muted)">Data timestamp: ${new Date(d.dataFreshness).toLocaleTimeString()} · ${d.aiModel}</div>
+            <div style="margin-top:8px;font-size:10px;color:var(--text-muted)">Source: ${prov.source || 'unknown'} · ${prov.quality || '—'} · ${prov.bars || 0} bars ${prov.interval || ''}</div>
+            <div style="margin-top:4px;font-size:10px;color:var(--text-muted)">Data timestamp: ${d.dataFreshness ? new Date(d.dataFreshness).toLocaleString() : 'unavailable'} · ${d.aiModel}</div>
+            ${unavailable.length ? `<div style="margin-top:6px;font-size:10px;color:var(--orange)">DATA UNAVAILABLE: ${unavailable.join(', ')}</div>` : ''}
+            ${(d.dataWarnings || []).map(w => `<div style="margin-top:2px;font-size:10px;color:var(--text-muted)">• ${w}</div>`).join('')}
             <div style="margin-top:6px;font-size:10px;color:var(--text-muted)">${d.disclaimer}</div>
         </div>`;
 }

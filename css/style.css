@@ -87,8 +87,15 @@ input,select,textarea{font-family:inherit}img{max-width:100%;display:block}ul,ol
 .btn-time{padding:6px 12px;background:transparent;border:none;color:var(--text-muted);font-size:11px;font-weight:700;border-radius:var(--radius-xs);transition:var(--transition-fast);letter-spacing:0.5px}
 .btn-time:hover{color:var(--text-secondary)}
 .btn-time.active{background:var(--blue);color:white}
-.chart-container{height:350px;width:100%;position:relative;background:var(--bg-base);border-radius:var(--radius-md);overflow:hidden}
-.chart-container canvas{width:100%!important;height:100%!important}
+.chart-container{height:400px;width:100%;position:relative;background:var(--bg-base);border-radius:var(--radius-md);overflow:hidden}
+.ohlc-bar{display:flex;gap:16px;padding:6px 8px;margin-bottom:8px;background:var(--bg-elevated);border-radius:var(--radius-sm);border:1px solid var(--border);font-family:var(--font-mono);font-size:11px;flex-wrap:wrap}
+.ohlc-item{display:flex;align-items:center;gap:4px}
+.ohlc-label{color:var(--text-muted);font-weight:700;font-size:10px;text-transform:uppercase}
+.ohlc-val{color:var(--text-secondary);font-weight:600}
+.ohlc-positive{color:var(--green) !important}
+.ohlc-negative{color:var(--red) !important}
+.ohlc-high{color:var(--green) !important}
+.ohlc-low{color:var(--red) !important}
 .trading-panel{padding:16px;border-bottom:1px solid var(--border)}
 .panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .panel-header h3{font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px}

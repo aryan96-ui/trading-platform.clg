@@ -15,6 +15,19 @@ const EventEmitter = require('events');
 const MarketCache = require('./cache');
 const Normalizer = require('./normalizer');
 
+// Providers and the instrument master disagree on singular/plural asset names
+// ('stock' vs 'stocks'). Canonicalise both sides before comparing.
+const ASSET_ALIASES = {
+    stock: 'stocks', stocks: 'stocks',
+    etf: 'etf', etfs: 'etf',
+    crypto: 'crypto',
+    forex: 'forex',
+    index: 'index', indices: 'index'
+};
+
+const CRYPTO_PREFIXES = /^(BTC|ETH|ADA|SOL|XRP|DOT|DOGE|AVAX|LINK|MATIC|LTC|BNB|USDT|USDC)/;
+const INDEX_SYMBOLS = ['NIFTY', 'SENSEX', 'NIFTY_BANK', 'NIFTY_IT', 'INDIA_VIX', 'SPX', 'IXIC', 'DJI', 'FTSE', 'DAX', 'NIKKEI'];
+
 class MarketGateway extends EventEmitter {
     constructor(config = {}) {
         super();
@@ -22,6 +35,8 @@ class MarketGateway extends EventEmitter {
         this.cache = new MarketCache(config.cache);
         this.isDemoMode = config.isDemoMode !== false; // Default true when no keys
         this._eventSubscribers = new Map(); // Symbol → Set of callbacks
+        this.instrumentMaster = null;
+        this._assetTypeCache = new Map(); // symbol:exchange → assetType
 
         // Metrics
         this.metrics = {
@@ -32,6 +47,91 @@ class MarketGateway extends EventEmitter {
             errors: 0,
             startTime: Date.now()
         };
+    }
+
+    /**
+     * Attach the instrument master so the gateway can route requests to
+     * providers that actually support the symbol's asset class. Without this
+     * a crypto-only provider is asked for stock history on every call and the
+     * request stalls until that provider times out.
+     */
+    setInstrumentMaster(instrumentMaster) {
+        this.instrumentMaster = instrumentMaster;
+        this._assetTypeCache.clear();
+    }
+
+    static canonAsset(assetType) {
+        const key = String(assetType || '').toLowerCase();
+        return ASSET_ALIASES[key] || key;
+    }
+
+    /**
+     * Resolve the asset class for a symbol: instrument master first, heuristics as fallback.
+     */
+    _resolveAssetType(symbol, exchange) {
+        const key = `${symbol}:${exchange || ''}`;
+        const memo = this._assetTypeCache.get(key);
+        if (memo) return memo;
+
+        let assetType = null;
+        if (this.instrumentMaster) {
+            try {
+                const exact = this.instrumentMaster.getBySymbol(symbol, exchange);
+                if (exact && exact.assetType) {
+                    assetType = exact.assetType;
+                } else {
+                    const upper = String(symbol).toUpperCase();
+                    const hit = this.instrumentMaster.search(symbol, {})
+                        .find(i => i.symbol && i.symbol.toUpperCase() === upper);
+                    if (hit && hit.assetType) assetType = hit.assetType;
+                }
+            } catch (e) {
+                // Instrument master unavailable — fall through to heuristics
+            }
+        }
+
+        if (!assetType) assetType = this._guessAssetType(symbol);
+        this._assetTypeCache.set(key, assetType);
+        return assetType;
+    }
+
+    _guessAssetType(symbol) {
+        const s = String(symbol || '').toUpperCase();
+        if (s.includes('/')) return 'forex';
+        if (INDEX_SYMBOLS.includes(s)) return 'index';
+        if (CRYPTO_PREFIXES.test(s) && !/^USDT?$/.test(s)) return 'crypto';
+        // Six-letter fiat pair such as USDINR / EURUSD
+        if (/^(USD|EUR|GBP|JPY|INR|AUD|CAD|CHF|NZD)/.test(s) && s.length === 6) return 'forex';
+        return 'stocks';
+    }
+
+    /**
+     * Single compatibility check for a provider against an asset class and
+     * exchange. Handles singular/plural asset naming (the instrument master
+     * says 'stock', providers declare 'stocks') and providers that declare no
+     * exchange restriction at all.
+     */
+    _providerSupportsAsset(provider, assetType, exchange) {
+        const declared = provider.supportedAssetTypes || [];
+        if (declared.length > 0 &&
+            !declared.map(MarketGateway.canonAsset).includes(MarketGateway.canonAsset(assetType))) {
+            return false;
+        }
+        const exchanges = provider.supportedExchanges || [];
+        if (exchange && exchanges.length > 0 && !exchanges.includes(exchange)) return false;
+        return true;
+    }
+
+    /**
+     * Providers eligible for an asset class, in priority order.
+     * Returns all providers when nothing declares support so a request is
+     * never silently unroutable.
+     */
+    _candidates(assetType, exchange) {
+        const matching = this.providers.filter(p => this._providerSupportsAsset(p, assetType, exchange));
+        // Nothing declared support for this class (unknown asset type) — fall
+        // back to every provider rather than making the symbol unroutable.
+        return matching.length > 0 ? matching : this.providers;
     }
 
     /**
@@ -58,12 +158,12 @@ class MarketGateway extends EventEmitter {
             return cached;
         }
 
-        // Try each provider in priority order
-        for (const provider of this.providers) {
+        // Try providers that actually support this symbol's asset class,
+        // in priority order. Filtering happens before canMakeRequest() so a
+        // skipped provider does not burn a rate-limit slot.
+        const assetType = this._resolveAssetType(symbol, exchange);
+        for (const provider of this._candidates(assetType, exchange)) {
             if (!provider.canMakeRequest()) continue;
-            if (!provider.supports('stocks', exchange) &&
-                !provider.supports('crypto', exchange) &&
-                !provider.supports('forex', exchange)) continue;
 
             try {
                 this.metrics.providerCalls++;
@@ -109,17 +209,28 @@ class MarketGateway extends EventEmitter {
 
         if (uncached.length === 0) return results;
 
+        // Resolve each symbol's asset class once, then let each provider only
+        // handle the symbols it declares support for.
+        const assetTypes = new Map();
+        for (const u of uncached) {
+            assetTypes.set(u.symbol, this._resolveAssetType(u.symbol, u.exchange));
+        }
+
         // Find best provider that supports batch quotes.
         // A provider only "wins" if it covered ALL requested symbols;
         // partial/empty results fall through to lower-priority providers
-        // (e.g. CoinGecko returns [] for stocks, so the demo provider
-        // must still get a chance to serve them).
+        // (e.g. a crypto-only provider is skipped for stock symbols, so the
+        // demo provider must still get a chance to serve them).
         const covered = new Set(results.map(q => q.symbol));
         const remaining = () => uncached.filter(u => !covered.has(u.symbol));
 
         for (const provider of this.providers) {
-            const todo = remaining();
-            if (todo.length === 0) break;
+            // Nothing left to fetch → done. A provider with no applicable
+            // symbols is skipped (not a reason to abort the whole loop).
+            if (remaining().length === 0) break;
+            const todo = remaining().filter(u =>
+                this._providerSupportsAsset(provider, assetTypes.get(u.symbol), u.exchange));
+            if (todo.length === 0) continue;
             if (!provider.canMakeRequest()) continue;
             if (typeof provider.getQuotes !== 'function') continue;
 
@@ -155,7 +266,8 @@ class MarketGateway extends EventEmitter {
             return cached;
         }
 
-        for (const provider of this.providers) {
+        const assetType = this._resolveAssetType(symbol, exchange);
+        for (const provider of this._candidates(assetType, exchange)) {
             if (!provider.canMakeRequest()) continue;
             try {
                 this.metrics.providerCalls++;
@@ -224,7 +336,7 @@ class MarketGateway extends EventEmitter {
             return cached;
         }
 
-        for (const provider of this.providers) {
+        for (const provider of this._candidates('index')) {
             if (!provider.canMakeRequest()) continue;
             try {
                 this.metrics.providerCalls++;
@@ -246,6 +358,14 @@ class MarketGateway extends EventEmitter {
      */
     getProviderHealth() {
         return this.providers.map(p => p.getHealthStatus());
+    }
+
+    /**
+     * Which providers would serve a given symbol (used by /metrics and UI).
+     */
+    describeRouting(symbol, exchange) {
+        const assetType = this._resolveAssetType(symbol, exchange);
+        return { symbol, exchange: exchange || null, assetType, providers: this._candidates(assetType).map(p => p.name) };
     }
 
     /**

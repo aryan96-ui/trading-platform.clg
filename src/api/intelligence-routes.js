@@ -7,7 +7,7 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = function createIntelligenceRoutes(services) {
-    const { journal, behavioral, aiCopilot, strategyLab } = services;
+    const { journal, behavioral, aiCopilot, strategyLab, aiContextBuilder } = services;
 
     // ========================================
     // TRADING JOURNAL
@@ -63,14 +63,35 @@ module.exports = function createIntelligenceRoutes(services) {
     // AI COPILOT
     // ========================================
 
-    // Analyze an instrument with AI + evidence panel
+    // Analyze an instrument with AI + evidence panel.
+    //
+    // The backend builds the context from real market data — client-supplied
+    // indicator numbers are never trusted, so the AI can only reason over
+    // figures ProTrader itself computed and can prove the source of.
     router.post('/ai/analyze', async (req, res) => {
-        const { context } = req.body;
-        if (!context || !context.symbol) {
-            return res.status(400).json({ success: false, error: 'context with symbol required' });
+        const { symbol, exchange, context: suppliedContext } = req.body || {};
+
+        let context = suppliedContext;
+        if (symbol && aiContextBuilder) {
+            try {
+                context = await aiContextBuilder.build(symbol, exchange);
+            } catch (error) {
+                return res.status(503).json({
+                    success: false,
+                    error: `Market data unavailable for ${symbol}: ${error.message}`
+                });
+            }
         }
+
+        if (!context || !context.symbol) {
+            return res.status(400).json({ success: false, error: 'symbol (or context with symbol) required' });
+        }
+
         try {
             const result = await aiCopilot.analyze(context);
+            result.dataProvenance = context.dataProvenance || null;
+            result.unavailable = context.unavailable || [];
+            result.dataWarnings = context.warnings || [];
             res.json({ success: true, data: result });
         } catch (error) {
             res.status(500).json({ success: false, error: error.message });

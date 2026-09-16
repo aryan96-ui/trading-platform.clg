@@ -368,7 +368,6 @@ class TradingPlatform {
 
         const data = assets[this.currentSymbol];
         document.getElementById('current-asset').textContent = this.currentSymbol;
-        document.getElementById('current-price').textContent = `₹${this.formatNumber(data.price)}`;
 
         const changeEl = document.getElementById('price-change');
         const changeClass = data.change >= 0 ? 'positive' : 'negative';
@@ -569,116 +568,245 @@ class TradingPlatform {
         });
     }
 
-    updateChart() {
-        if (!this.chart || !this.marketData) return;
+    /**
+     * Fetch the instrument's candle history from the backend so the dashboard
+     * chart shows the same series as the terminal, screener and AI analysis.
+     * Returns null when the API is unavailable (caller falls back, and labels it).
+     */
+    async loadHistoryCandles(symbol, interval = '1D', limit = 150) {
+        try {
+            const res = await fetch(`/api/v2/history/${encodeURIComponent(symbol)}?interval=${interval}&limit=${limit}`);
+            const json = await res.json();
+            if (!json.success || !Array.isArray(json.data) || json.data.length === 0) return null;
 
+            const candles = [];
+            const volumes = [];
+            for (const c of json.data) {
+                const time = Math.floor(new Date(c.timestamp).getTime() / 1000);
+                if (!isFinite(time)) continue;
+                candles.push({
+                    time,
+                    open: +Number(c.open).toFixed(2),
+                    high: +Number(c.high).toFixed(2),
+                    low: +Number(c.low).toFixed(2),
+                    close: +Number(c.close).toFixed(2)
+                });
+                volumes.push({
+                    time,
+                    value: Math.round(Number(c.volume)) || 0,
+                    color: Number(c.close) >= Number(c.open) ? 'rgba(0,200,83,0.3)' : 'rgba(255,61,61,0.3)'
+                });
+            }
+            if (candles.length === 0) return null;
+
+            candles.sort((a, b) => a.time - b.time);
+            volumes.sort((a, b) => a.time - b.time);
+
+            const last = candles[candles.length - 1];
+            const prev = candles.length > 1 ? candles[candles.length - 2] : null;
+            return {
+                candles,
+                volumes,
+                provenance: json.data[0].dataQuality || 'DEMO',
+                source: json.data[0].source || 'unknown',
+                changePercent: prev && prev.close ? ((last.close - prev.close) / prev.close) * 100 : null
+            };
+        } catch (error) {
+            return null;
+        }
+    }
+
+    /**
+     * Render one series into the chart, preferring real provider history.
+     */
+    async renderChartData(symbol, fallbackPrice) {
+        const history = await this.loadHistoryCandles(symbol, '1D', 150);
+        const ohlcData = history || { ...this.generateOHLCData(symbol, fallbackPrice), provenance: 'LOCAL-SIM', changePercent: null };
+
+        this.candleSeries.setData(ohlcData.candles);
+        this.volumeSeries.setData(ohlcData.volumes);
+        this.updateOHLCDisplay(ohlcData.candles[ohlcData.candles.length - 1]);
+
+        // Keep the quoted change consistent with the plotted series instead of
+        // the two disagreeing.
+        if (ohlcData.changePercent !== null && ohlcData.changePercent !== undefined) {
+            const changeEl = document.getElementById('price-change');
+            if (changeEl) {
+                changeEl.className = `price-change ${ohlcData.changePercent >= 0 ? 'positive' : 'negative'}`;
+                changeEl.textContent = `${ohlcData.changePercent >= 0 ? '+' : ''}${ohlcData.changePercent.toFixed(2)}%`;
+            }
+        }
+
+        const badge = document.getElementById('chart-provenance');
+        if (badge) {
+            badge.textContent = ohlcData.provenance || '—';
+            badge.title = `source: ${ohlcData.source || 'local simulation'} · 1D · ${ohlcData.candles.length} bars`;
+        }
+    }
+
+    async updateChart() {
+        if (!this.tvChart || !this.marketData) return;
         const assets = this.marketData[this.currentAssetType];
         if (!assets || !assets[this.currentSymbol]) return;
-
         const currentPrice = assets[this.currentSymbol].price;
-        const data = this.generateChartData(this.currentSymbol, currentPrice);
-
-        // Update chart data
-        this.chart.data.labels = data.labels;
-        this.chart.data.datasets[0].data = data.prices;
-
-        // Update border color based on trend
-        const trend = data.prices[data.prices.length - 1] > data.prices[0];
-        this.chart.data.datasets[0].borderColor = trend ? '#00c853' : '#ff3d3d';
-        this.chart.data.datasets[0].backgroundColor = trend ? 'rgba(0, 200, 83, 0.1)' : 'rgba(255, 61, 61, 0.1)';
-
-        this.chart.update('none'); // Update without animation
+        await this.renderChartData(this.currentSymbol, currentPrice);
     }
 
     initChart() {
-        const ctx = document.getElementById('tradingChart').getContext('2d');
+        const container = document.getElementById('tvchart-container');
+        if (!container) return;
 
-        // Get initial price if available
+        // Get initial price
         let initialPrice = 2450;
         if (this.marketData && this.marketData[this.currentAssetType] && this.marketData[this.currentAssetType][this.currentSymbol]) {
             initialPrice = this.marketData[this.currentAssetType][this.currentSymbol].price;
         }
 
-        const data = this.generateChartData(this.currentSymbol, initialPrice);
-
-        this.chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Price',
-                    data: data.prices,
-                    borderColor: '#00c853',
-                    backgroundColor: 'rgba(0, 200, 83, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: '#00c853',
-                    pointHoverBorderColor: '#ffffff',
-                    pointHoverBorderWidth: 2
-                }]
+        // Create LightweightChart
+        this.tvChart = LightweightCharts.createChart(container, {
+            layout: {
+                background: { type: 'solid', color: '#0a0e17' },
+                textColor: '#8b95a5',
+                fontSize: 11,
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: 'rgba(30, 34, 45, 0.95)',
-                        titleColor: '#8b95a5',
-                        bodyColor: '#ffffff',
-                        borderColor: '#1e293b',
-                        borderWidth: 1,
-                        padding: 12,
-                        displayColors: false,
-                        callbacks: {
-                            label: function (context) {
-                                return '₹' + context.parsed.y.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: '#1e293b',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#8b95a5',
-                            maxTicksLimit: 10,
-                            font: {
-                                size: 11
-                            }
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: '#1e293b',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#8b95a5',
-                            callback: function (value) {
-                                return '₹' + value.toLocaleString('en-IN');
-                            },
-                            font: {
-                                size: 11
-                            }
-                        }
-                    }
-                },
-                interaction: {
-                    mode: 'nearest',
-                    axis: 'x',
-                    intersect: false
-                }
-            }
+            grid: {
+                vertLines: { color: 'rgba(30, 41, 59, 0.5)' },
+                horzLines: { color: 'rgba(30, 41, 59, 0.5)' }
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+                vertLine: { color: 'rgba(59, 130, 246, 0.4)', style: LightweightCharts.LineStyle.Dashed, labelBackgroundColor: '#3b82f6' },
+                horzLine: { color: 'rgba(59, 130, 246, 0.4)', style: LightweightCharts.LineStyle.Dashed, labelBackgroundColor: '#3b82f6' }
+            },
+            rightPriceScale: {
+                borderColor: '#1e293b',
+                scaleMargins: { top: 0.05, bottom: 0.25 }
+            },
+            timeScale: {
+                borderColor: '#1e293b',
+                timeVisible: true,
+                secondsVisible: false
+            },
+            handleScroll: { vertTouchDrag: false }
         });
+
+        // Candlestick series
+        this.candleSeries = this.tvChart.addCandlestickSeries({
+            upColor: '#00c853',
+            downColor: '#ff3d3d',
+            borderUpColor: '#00c853',
+            borderDownColor: '#ff3d3d',
+            wickUpColor: '#00c853',
+            wickDownColor: '#ff3d3d'
+        });
+
+        // Volume histogram series
+        this.volumeSeries = this.tvChart.addHistogramSeries({
+            priceFormat: { type: 'volume' },
+            priceScaleId: 'volume'
+        });
+
+        this.tvChart.priceScale('volume').applyOptions({
+            scaleMargins: { top: 0.8, bottom: 0 }
+        });
+
+        // Load the instrument's history from the backend (provider data),
+        // falling back to the local simulation only if that is unavailable.
+        this.renderChartData(this.currentSymbol, initialPrice);
+
+        // Update OHLC bar on crosshair move
+        this.tvChart.subscribeCrosshairMove(param => {
+            if (!param || !param.time || !param.seriesData) return;
+            const candleData = param.seriesData.get(this.candleSeries);
+            if (candleData) this.updateOHLCDisplay(candleData);
+        });
+
+        // Fit content
+        this.tvChart.timeScale().fitContent();
+
+        // Resize observer
+        this._resizeObserver = new ResizeObserver(() => {
+            if (this.tvChart) this.tvChart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+        });
+        this._resizeObserver.observe(container);
+    }
+
+    updateOHLCDisplay(candle) {
+        if (!candle) return;
+        const openEl = document.getElementById('ohlc-open');
+        const highEl = document.getElementById('ohlc-high');
+        const lowEl = document.getElementById('ohlc-low');
+        const closeEl = document.getElementById('ohlc-close');
+        const changeEl = document.getElementById('ohlc-change');
+        const volumeEl = document.getElementById('ohlc-volume');
+
+        if (openEl) openEl.textContent = this.formatNumber(candle.open);
+        if (highEl) highEl.textContent = this.formatNumber(candle.high);
+        if (lowEl) lowEl.textContent = this.formatNumber(candle.low);
+        if (closeEl) closeEl.textContent = this.formatNumber(candle.close);
+
+        const change = candle.close - candle.open;
+        const changePct = ((change / candle.open) * 100).toFixed(2);
+        const isPositive = change >= 0;
+        if (changeEl) {
+            changeEl.textContent = `${isPositive ? '+' : ''}${this.formatNumber(change)} (${isPositive ? '+' : ''}${changePct}%)`;
+            changeEl.className = `ohlc-val ${isPositive ? 'ohlc-positive' : 'ohlc-negative'}`;
+        }
+        if (volumeEl && candle.volume) {
+            const vol = candle.volume;
+            volumeEl.textContent = vol >= 1000000 ? (vol / 1000000).toFixed(1) + 'M' : vol >= 1000 ? (vol / 1000).toFixed(0) + 'K' : vol;
+        }
+    }
+
+    generateOHLCData(symbol, currentPrice) {
+        // Seed-based random for consistent data per symbol
+        let seed = 0;
+        for (let i = 0; i < symbol.length; i++) seed += symbol.charCodeAt(i);
+        const seededRandom = (i) => { const x = Math.sin(seed + i) * 10000; return x - Math.floor(x); };
+
+        const candles = [];
+        const volumes = [];
+        const numCandles = 150; // ~6 months of daily data
+        const now = new Date();
+
+        let price = currentPrice * 0.88; // Start 12% below
+        const trendPerCandle = (currentPrice - price) / numCandles;
+        const volatility = currentPrice * 0.018; // 1.8% daily vol
+
+        for (let i = 0; i < numCandles; i++) {
+            const date = new Date(now);
+            date.setDate(date.getDate() - (numCandles - i));
+            // Skip weekends
+            if (date.getDay() === 0 || date.getDay() === 6) continue;
+
+            const time = Math.floor(date.getTime() / 1000);
+            const rand = seededRandom(i);
+            const rand2 = seededRandom(i + 1000);
+            const rand3 = seededRandom(i + 2000);
+            const rand4 = seededRandom(i + 3000);
+
+            // Trend + random walk
+            const move = trendPerCandle + (rand - 0.5) * volatility;
+            const open = price;
+            const intraHigh = open + Math.abs((rand2 - 0.4) * volatility * 1.5);
+            const intraLow = open - Math.abs((rand3 - 0.6) * volatility * 1.5);
+            price = open + move;
+            const close = Math.max(price, currentPrice * 0.65);
+
+            const high = Math.max(open, close, intraHigh);
+            const low = Math.min(open, close, intraLow);
+
+            // Volume: higher on big moves, base 500K-3M
+            const baseVol = 500000 + rand4 * 2500000;
+            const moveSize = Math.abs(close - open) / open;
+            const vol = Math.round(baseVol * (1 + moveSize * 50));
+
+            candles.push({ time, open: +open.toFixed(2), high: +high.toFixed(2), low: +low.toFixed(2), close: +close.toFixed(2) });
+            volumes.push({ time, value: vol, color: close >= open ? 'rgba(0,200,83,0.3)' : 'rgba(255,61,61,0.3)' });
+        }
+
+        return { candles, volumes };
     }
 
     generateOptionsChain() {
@@ -805,46 +933,6 @@ class TradingPlatform {
                 <span class="greek-value">${dte} days</span>
             </div>
         `;
-    }
-
-    generateChartData(symbol = 'DEFAULT', currentPrice = 2450) {
-        const labels = [];
-        const prices = [];
-
-        // Create a unique seed based on symbol for consistent but different patterns
-        let seed = 0;
-        for (let i = 0; i < symbol.length; i++) {
-            seed += symbol.charCodeAt(i);
-        }
-
-        // Seeded random function for consistent patterns per symbol
-        const seededRandom = (index) => {
-            const x = Math.sin(seed + index) * 10000;
-            return x - Math.floor(x);
-        };
-
-        // Start from a price relative to current price
-        let basePrice = currentPrice * 0.92; // Start 8% below current price
-        const volatility = currentPrice * 0.015; // 1.5% volatility
-        const trend = (currentPrice - basePrice) / 50; // Upward trend to reach current price
-
-        for (let i = 0; i < 50; i++) {
-            // Generate time labels
-            const time = new Date();
-            time.setMinutes(time.getMinutes() - (50 - i) * 5);
-            labels.push(time.getHours() + ':' + String(time.getMinutes()).padStart(2, '0'));
-
-            // Add trend + random walk
-            const randomChange = (seededRandom(i) - 0.5) * volatility;
-            basePrice += trend + randomChange;
-
-            prices.push(Math.max(basePrice, currentPrice * 0.7)); // Don't go below 70% of current
-        }
-
-        // Ensure last price is close to current price
-        prices[prices.length - 1] = currentPrice;
-
-        return { labels, prices };
     }
 
     formatCurrency(amount) {

@@ -11,7 +11,12 @@
  * 
  * Supports custom filter builder:
  *   RSI < 30 AND volume > 2x average AND price > 200 EMA
+ *
+ * All technical values are computed from real candle history via the
+ * IndicatorEngine — never synthesised.
  */
+const IndicatorEngine = require('./indicator-engine');
+
 class ScreenerEngine {
     constructor(instrumentMaster, gateway) {
         this.master = instrumentMaster;
@@ -226,42 +231,33 @@ class ScreenerEngine {
     }
 
     async _enrichWithMarketData(instruments) {
-        // Simulate technical data for demo (in production, fetch from gateway)
-        return instruments.map(inst => ({
-            ...inst,
-            _technicalData: this._generateMockTechnical(inst)
-        }));
-    }
+        // Real indicators, computed from each instrument's actual candle
+        // history plus its live quote. Values with no available dataset
+        // (market cap, P/E, dividend yield) stay null so the UI can report
+        // DATA UNAVAILABLE instead of showing an invented number.
+        return Promise.all(instruments.map(async inst => {
+            let quote = null;
+            let candles = [];
 
-    _generateMockTechnical(inst) {
-        const basePrice = 1000 + Math.random() * 5000;
-        const rsi = 20 + Math.random() * 60;
-        return {
-            price: basePrice,
-            rsi,
-            macdLine: (Math.random() - 0.5) * 20,
-            macdHistogram: (Math.random() - 0.5) * 5,
-            ema20: basePrice * (0.97 + Math.random() * 0.06),
-            ema50: basePrice * (0.94 + Math.random() * 0.12),
-            ema200: basePrice * (0.85 + Math.random() * 0.3),
-            sma20: basePrice * (0.97 + Math.random() * 0.06),
-            sma50: basePrice * (0.94 + Math.random() * 0.12),
-            sma200: basePrice * (0.85 + Math.random() * 0.3),
-            atr: basePrice * (0.01 + Math.random() * 0.03),
-            bollingerPosition: Math.random() * 100,
-            stochasticK: 10 + Math.random() * 80,
-            adx: 10 + Math.random() * 60,
-            volume: Math.floor(100000 + Math.random() * 5000000),
-            relativeVolume: 0.5 + Math.random() * 3,
-            change1D: (Math.random() - 0.5) * 6,
-            change1W: (Math.random() - 0.5) * 12,
-            change1M: (Math.random() - 0.5) * 20,
-            proximity52wHigh: Math.random() * 30,
-            proximity52wLow: Math.random() * 30,
-            marketCap: 5000 + Math.random() * 500000,
-            dividendYield: Math.random() * 5,
-            peRatio: 5 + Math.random() * 60
-        };
+            try {
+                quote = await this.gateway.getQuote(inst.symbol, inst.exchange);
+            } catch (error) { /* quote unavailable → fall back to last close */ }
+
+            try {
+                candles = await this.gateway.getHistory(inst.symbol, inst.exchange, '1D', 260);
+            } catch (error) { /* history unavailable → indicators report null */ }
+
+            const technical = IndicatorEngine.snapshot(candles, quote);
+            return {
+                ...inst,
+                _technicalData: technical,
+                dataProvenance: {
+                    source: (quote && quote.source) || technical.dataSource,
+                    quality: (quote && quote.dataQuality) || (candles.length ? 'DEMO' : 'UNAVAILABLE'),
+                    bars: candles.length
+                }
+            };
+        }));
     }
 
     _buildFilterDefinitions() {
