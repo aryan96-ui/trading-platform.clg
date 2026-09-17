@@ -148,7 +148,12 @@ class MarketGateway extends EventEmitter {
      * Tries providers in priority order, falls back to cache
      */
     async getQuote(symbol, exchange) {
-        const cacheKey = MarketCache.key('quote', symbol, exchange || 'default');
+        // Keyed by symbol alone: the instrument master maps each symbol to exactly
+        // one exchange, and every consumer (ticker, heatmap, screener, AI) must see
+        // the same quote. Keying on the exchange made the read use the caller's
+        // spelling ('default' when omitted) while the write used the provider's
+        // echoed label, so the cache never hit and each route regenerated a price.
+        const cacheKey = MarketCache.key('quote', symbol);
         this.metrics.totalRequests++;
 
         // Check cache first for fresh data
@@ -195,9 +200,9 @@ class MarketGateway extends EventEmitter {
         const results = [];
         const uncached = [];
 
-        // Separate cached vs uncached
+        // Separate cached vs uncached (symbol-only key — see getQuote)
         for (const { symbol, exchange } of symbols) {
-            const cacheKey = MarketCache.key('quote', symbol, exchange || 'default');
+            const cacheKey = MarketCache.key('quote', symbol);
             const cached = this.cache.get(cacheKey);
             if (cached) {
                 results.push(cached);
@@ -240,7 +245,7 @@ class MarketGateway extends EventEmitter {
                 for (const quote of quotes) {
                     if (!quote || !quote.symbol) continue;
                     covered.add(quote.symbol);
-                    const cacheKey = MarketCache.key('quote', quote.symbol, quote.exchange || 'default');
+                    const cacheKey = MarketCache.key('quote', quote.symbol);
                     this.cache.set(cacheKey, quote, 'quote');
                     results.push(quote);
                     this.emit('quote', quote);

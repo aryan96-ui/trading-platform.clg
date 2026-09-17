@@ -121,14 +121,28 @@ class GuardrailEngine {
         }
 
         // 6. Risk per trade
-        const riskValue = Math.abs((trade.entryPrice || 0) - (trade.stopLoss || 0)) * (trade.quantity || 0);
-        const riskPct = accountValue > 0 ? (riskValue / accountValue) * 100 : 0;
-        if (riskPct > settings.maxRiskPerTradePct) {
-            blocks.push({
-                type: 'risk_per_trade',
-                severity: 'HIGH',
-                message: `Risk per trade ${riskPct.toFixed(1)}% exceeds ${settings.maxRiskPerTradePct}%`,
-                evidence: `Risk amount ${riskValue.toFixed(0)}`
+        //
+        // Risk is only measurable when a stop is defined. Treating a missing
+        // stop as a stop at zero would report the whole notional as risk and
+        // block every order without one, so that case is raised as a warning
+        // instead.
+        if (trade.stopLoss) {
+            const riskValue = Math.abs((trade.entryPrice || 0) - trade.stopLoss) * (trade.quantity || 0);
+            const riskPct = accountValue > 0 ? (riskValue / accountValue) * 100 : 0;
+            if (riskPct > settings.maxRiskPerTradePct) {
+                blocks.push({
+                    type: 'risk_per_trade',
+                    severity: 'HIGH',
+                    message: `Risk per trade ${riskPct.toFixed(1)}% exceeds ${settings.maxRiskPerTradePct}%`,
+                    evidence: `Risk amount ${riskValue.toFixed(0)}`
+                });
+            }
+        } else {
+            warnings.push({
+                type: 'no_stop_loss',
+                severity: 'MEDIUM',
+                message: 'No stop loss defined for this trade',
+                evidence: 'Risk per trade cannot be measured without a stop'
             });
         }
 

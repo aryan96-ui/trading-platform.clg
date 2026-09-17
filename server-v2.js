@@ -111,7 +111,7 @@ const MarketTape = require('./src/engine/market-tape');
 const createEngineRoutes = require('./src/api/engine-routes');
 
 const screener = new ScreenerEngine(instrumentMaster, gateway);
-const sectorHeatmap = new SectorHeatmap(instrumentMaster);
+const sectorHeatmap = new SectorHeatmap(instrumentMaster, gateway);
 const marketRegime = new MarketRegimeEngine();
 const tradeQuality = new TradeQualityEngine(marketRegime);
 const riskTerminal = new RiskTerminal();
@@ -173,7 +173,7 @@ journal.trades.set = ((original) => function (key, value) {
 // Wrap closeTrade to enrich with regime + post-trade learning
 const originalCloseTrade = journal.closeTrade.bind(journal);
 journal.closeTrade = (email, tradeId, exitPrice, context = {}) => {
-    const closed = originalCloseTrade(email, tradeId, exitPrice);
+    const closed = originalCloseTrade(email, tradeId, exitPrice, context);
     if (closed) {
         try {
             const enriched = { ...closed, marketRegime: closed.marketRegime || context.regime?.regime || 'UNKNOWN' };
@@ -221,11 +221,49 @@ console.log('  ✅ Risk Terminal ready');
 console.log('  ✅ Market Tape ready');
 
 // ============================================
+// PAPER TRADING
+// Single owner of account, order, position and P&L state. Fills are priced
+// from the gateway, and every fill links to a journal trade so the trade
+// carries its regime, strategy and risk into the intelligence layer.
+// ============================================
+const PaperTradingService = require('./src/trading/paper-trading');
+const { computeExcursions } = require('./src/trading/excursions');
+const { createTradingRoutes } = require('./src/api/trading-routes');
+
+const trading = new PaperTradingService({
+    gateway,
+    instrumentMaster,
+    journal,
+    guardrails,
+    preTradeRisk,
+    positionSizing,
+    regimeEngine: marketRegime,
+    eventBus,
+    computeExcursions
+});
+
+// Resting limit orders are evaluated against fresh quotes.
+setInterval(() => {
+    trading.tryFillOpenOrders().catch(e => console.error('[trading] resting order sweep failed:', e.message));
+}, 15000).unref?.();
+
+console.log('  ✅ Paper Trading Service ready');
+
+// Seed the demo account with real orders executed through the service, so the
+// unified workspace opens with live positions, a resting order book and P&L
+// instead of empty panels. Nothing here is invented: each fill uses the
+// gateway's current DEMO-labelled quote.
+seedPaperAccount(trading, gateway);
+
+// ============================================
 // API ROUTES
 // ============================================
 
 // v2 Market API (new professional routes)
 app.use('/api/v2', createMarketRoutes(gateway, instrumentMaster, marketStream));
+
+// v2 Paper Trading API (account, orders, positions, P&L)
+app.use('/api/v2', createTradingRoutes({ trading }));
 
 // v2 Engine API (analytics, screener, heatmap, regime, risk, tape)
 app.use('/api/v2', createEngineRoutes({
@@ -355,8 +393,11 @@ app.get('/api/market-data', async (req, res) => {
     }
 });
 
-// Trade endpoint
-app.post('/api/trade', (req, res) => {
+// Trade endpoint (v1 request shape) — delegates to the paper trading service
+// so the legacy request shape and the unified terminal share ONE order book
+// and ONE price source (previously this path filled at a random price that no
+// other screen could reproduce).
+app.post('/api/trade', async (req, res) => {
     const { email, symbol, type, quantity, assetType } = req.body;
     if (!email || !symbol || !type || !quantity) {
         return res.json({ success: false, message: 'Missing parameters' });
@@ -365,37 +406,19 @@ app.post('/api/trade', (req, res) => {
     const user = users.get(email);
     if (!user) return res.json({ success: false, message: 'User not found' });
 
-    const priceData = getDemoStock(symbol);
-    const price = priceData.price;
-    const totalAmount = quantity * price;
-
-    if (!user.portfolio) user.portfolio = {};
-    if (!user.portfolio[symbol]) {
-        user.portfolio[symbol] = { quantity: 0, avgPrice: 0, assetType };
+    const result = await trading.placeOrder({
+        email, symbol, side: type, quantity: Number(quantity), orderType: 'market'
+    });
+    if (!result.success) {
+        return res.json({ success: false, message: result.error });
     }
 
-    const holding = user.portfolio[symbol];
-
-    if (type === 'buy') {
-        if (totalAmount > user.balance) {
-            return res.json({ success: false, message: 'Insufficient balance' });
-        }
-        const newQty = holding.quantity + quantity;
-        holding.avgPrice = ((holding.avgPrice * holding.quantity) + totalAmount) / newQty;
-        holding.quantity = newQty;
-        user.balance -= totalAmount;
-    } else if (type === 'sell') {
-        if (holding.quantity < quantity) {
-            return res.json({ success: false, message: 'Insufficient holdings' });
-        }
-        holding.quantity -= quantity;
-        user.balance += totalAmount;
-        if (holding.quantity === 0) delete user.portfolio[symbol];
+    const account = result.data.account;
+    user.balance = account.balance;
+    user.portfolio = {};
+    for (const p of account.positions) {
+        user.portfolio[p.symbol] = { quantity: p.quantity, avgPrice: p.avgPrice, assetType: p.assetType || assetType };
     }
-
-    const tradeRecord = { type, symbol, quantity, price, totalAmount, assetType, timestamp: new Date().toISOString() };
-    if (!tradeHistory.has(email)) tradeHistory.set(email, []);
-    tradeHistory.get(email).push(tradeRecord);
 
     return res.json({ success: true, newBalance: user.balance, portfolio: user.portfolio });
 });
@@ -410,17 +433,28 @@ app.post('/api/payment', (req, res) => {
     return res.json({ success: true, newBalance: user.balance });
 });
 
-// History endpoint
+// History endpoint — served from the paper trading fill log
 app.get('/api/history/:email', (req, res) => {
-    const history = tradeHistory.get(req.params.email) || [];
+    const { fills } = trading.getFills(req.params.email, { limit: 500 });
+    const history = fills.slice().reverse().map(f => ({
+        type: f.side, symbol: f.symbol, quantity: f.quantity, price: f.price,
+        totalAmount: parseFloat((f.quantity * f.price).toFixed(2)),
+        assetType: undefined, timestamp: f.at
+    }));
     res.json({ success: true, history });
 });
 
-// Portfolio endpoint
-app.get('/api/portfolio/:email', (req, res) => {
-    const user = users.get(req.params.email);
-    if (!user) return res.json({ success: false, portfolio: {} });
-    res.json({ success: true, portfolio: user.portfolio || {} });
+// Portfolio endpoint — live mark-to-market snapshot in the legacy shape
+app.get('/api/portfolio/:email', async (req, res) => {
+    const snapshot = await trading.snapshot(req.params.email);
+    const portfolio = {};
+    for (const p of snapshot.positions) {
+        portfolio[p.symbol] = {
+            quantity: p.quantity, avgPrice: p.avgPrice, assetType: p.assetType,
+            currentPrice: p.currentPrice, pnl: p.unrealizedPnl, pnlPercent: p.unrealizedPnlPercent
+        };
+    }
+    res.json({ success: true, portfolio, balance: snapshot.balance, equity: snapshot.equity });
 });
 
 // Stocks list
@@ -437,6 +471,79 @@ app.get('/api/stocks', (req, res) => {
 // ============================================
 // DEMO DATA HELPERS
 // ============================================
+
+/**
+ * Open a small, deterministic demo book through the real order path.
+ * Every fill is priced by the gateway, so the seeded positions obey the same
+ * rules as a user-placed order (risk check, journal linkage, commission).
+ */
+async function seedPaperAccount(trading, gateway) {
+    const email = 'demo@college.com';
+    const OPEN_POSITIONS = [
+        { symbol: 'RELIANCE', quantity: 10, strategy: 'momentum-breakout' },
+        { symbol: 'HDFCBANK', quantity: 12, strategy: 'trend-following' },
+        { symbol: 'TCS', quantity: 6, strategy: 'momentum-breakout' },
+        { symbol: 'TATAMOTORS', quantity: 20, strategy: 'mean-reversion' }
+    ];
+
+    try {
+        for (const p of OPEN_POSITIONS) {
+            const quote = await gateway.getQuote(p.symbol);
+            if (!quote || !isFinite(quote.price)) continue;
+            await trading.placeOrder({
+                email,
+                symbol: p.symbol,
+                side: 'buy',
+                quantity: p.quantity,
+                orderType: 'market',
+                stopLoss: parseFloat((quote.price * 0.96).toFixed(2)),
+                target: parseFloat((quote.price * 1.08).toFixed(2)),
+                strategy: p.strategy,
+                notes: 'demo book seed',
+                acknowledgeGuardrails: true,
+                guardrailReason: 'demo seed'
+            });
+        }
+
+        // Resting limit orders below market — they stay open and are evaluated
+        // against fresh quotes by the sweep, exactly like a user's orders.
+        for (const rest of [{ symbol: 'INFY', quantity: 5 }, { symbol: 'ITC', quantity: 10 }]) {
+            const quote = await gateway.getQuote(rest.symbol);
+            if (!quote || !isFinite(quote.price)) continue;
+            await trading.placeOrder({
+                email,
+                symbol: rest.symbol,
+                side: 'buy',
+                quantity: rest.quantity,
+                orderType: 'limit',
+                limitPrice: parseFloat((quote.price * 0.94).toFixed(2)),
+                strategy: 'mean-reversion',
+                notes: 'demo book seed (resting)'
+            });
+        }
+
+        // One cancelled order so the order history shows a full lifecycle.
+        const placeholder = await gateway.getQuote('SBIN');
+        if (placeholder && isFinite(placeholder.price)) {
+            const placed = await trading.placeOrder({
+                email,
+                symbol: 'SBIN',
+                side: 'buy',
+                quantity: 8,
+                orderType: 'limit',
+                limitPrice: parseFloat((placeholder.price * 0.9).toFixed(2)),
+                strategy: 'mean-reversion',
+                notes: 'demo book seed (cancelled)'
+            });
+            if (placed.success) trading.cancelOrder(email, placed.data.order.id);
+        }
+
+        console.log('  ✅ Demo paper account seeded');
+    } catch (e) {
+        console.error('  ⚠️  Demo paper account seed failed:', e.message);
+    }
+}
+
 function seedDemoHistory(journal, svcs = {}) {
     const email = 'demo@college.com';
     const SYMBOLS = [

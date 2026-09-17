@@ -92,33 +92,48 @@ module.exports = function createEngineRoutes(engines) {
 
     /**
      * GET /api/v2/heatmap
-     * Get full market heatmap
+     * Get full market heatmap computed from live gateway quotes.
+     *
+     * Note: this route deliberately takes no input. It previously read
+     * `req.body` — which a GET never has — so the engine received `{}` and
+     * filled every price and change in from random numbers.
      */
-    router.get('/heatmap', (req, res) => {
-        const priceData = req.body || {};
-        const heatmapData = heatmap.generate(priceData);
-        res.json({ success: true, data: heatmapData });
+    router.get('/heatmap', async (req, res) => {
+        try {
+            const heatmapData = await heatmap.generate();
+            res.json({ success: true, data: heatmapData });
+        } catch (error) {
+            res.status(503).json({ success: false, error: `Heatmap unavailable: ${error.message}` });
+        }
     });
 
     /**
      * GET /api/v2/heatmap/sector/:name
      * Drill down into a specific sector
      */
-    router.get('/heatmap/sector/:name', (req, res) => {
-        const sectorData = heatmap.drilldown(req.params.name);
-        if (!sectorData) {
-            return res.status(404).json({ success: false, error: 'Sector not found' });
+    router.get('/heatmap/sector/:name', async (req, res) => {
+        try {
+            const sectorData = await heatmap.drilldown(req.params.name);
+            if (!sectorData) {
+                return res.status(404).json({ success: false, error: 'Sector not found' });
+            }
+            res.json({ success: true, data: sectorData });
+        } catch (error) {
+            res.status(503).json({ success: false, error: `Heatmap unavailable: ${error.message}` });
         }
-        res.json({ success: true, data: sectorData });
     });
 
     /**
      * GET /api/v2/heatmap/sectors
      * Get sector performance summary
      */
-    router.get('/heatmap/sectors', (req, res) => {
-        const performance = heatmap.getSectorPerformance();
-        res.json({ success: true, data: performance });
+    router.get('/heatmap/sectors', async (req, res) => {
+        try {
+            const performance = await heatmap.getSectorPerformance();
+            res.json({ success: true, data: performance });
+        } catch (error) {
+            res.status(503).json({ success: false, error: `Heatmap unavailable: ${error.message}` });
+        }
     });
 
     // ========================================

@@ -207,6 +207,58 @@ async function waitUp() {
     assert(r.status === 200 && r.json.data.length >= 0, 'Event bus query');
     assert(r.json.data.some(e => e.type === 'TRADE_CLOSED') || r.json.stats, 'Event bus has stats');
 
+    // ---- Heatmap: real data, deterministic, consistent with quotes ----
+    const h1 = await req('GET', '/api/v2/heatmap');
+    const h2 = await req('GET', '/api/v2/heatmap');
+    assert(h1.status === 200 && h1.json.success, 'Heatmap returns 200');
+
+    const flat = h1.json.data.sectors.flatMap(s => s.stocks);
+    const rated = flat.filter(s => s.available);
+    assert(flat.length > 0, 'Heatmap covers the stock universe');
+    assert(rated.length > 0, 'Heatmap has rated instruments');
+
+    // Repeated identical requests must be identical (the defect this fixes)
+    const fingerprint = h => h.json.data.sectors.map(s =>
+        s.name + ':' + s.changePercent + ':' + s.stocks.map(x => x.symbol + '=' + x.changePercent + '/' + x.price).join(',')).join('|');
+    assert(fingerprint(h1) === fingerprint(h2), 'Repeated heatmap requests are identical');
+
+    // Every value must agree with the quotes the user can see elsewhere
+    const symbolList = rated.slice(0, 20).map(s => s.symbol).join(',');
+    const q = await req('GET', '/api/v2/quotes?symbols=' + symbolList);
+    const quoteBySymbol = new Map(q.json.data.map(x => [x.symbol, x]));
+    // The heatmap stores display-rounded numbers; compare at the same precision
+    const mismatches = rated.slice(0, 20).filter(s => {
+        const quote = quoteBySymbol.get(s.symbol);
+        if (!quote) return false; // quote cache window moved on; skip
+        return s.price !== parseFloat(Number(quote.price).toFixed(2))
+            || s.changePercent !== parseFloat(Number(quote.changePercent).toFixed(2));
+    });
+    assert(mismatches.length === 0, 'Heatmap values match /api/v2/quotes (' + mismatches.map(m => m.symbol).join(',') + ')');
+
+    // Nothing may be invented: no fundamentals, and unrated rows carry no numbers
+    assert(flat.every(s => s.marketCap === null), 'Heatmap invents no market cap');
+    assert(flat.every(s => s.available || (s.price === null && s.change === null && s.changePercent === null && s.volume === null)),
+        'Unrated instruments carry nulls, not estimates');
+    assert(h1.json.data.stats.unavailable + h1.json.data.stats.advancers + h1.json.data.stats.decliners + h1.json.data.stats.unchanged === flat.length,
+        'Breadth stats account for every instrument');
+    assert(h1.json.data.provenance && h1.json.data.provenance.rated === rated.length,
+        'Heatmap reports provenance');
+
+    // Sector aggregate must equal the mean of its rated constituents
+    const sector = h1.json.data.sectors.find(s => s.availableCount > 1);
+    const ratedStocks = sector.stocks.filter(s => s.changePercent !== null);
+    const mean = ratedStocks.reduce((a, s) => a + s.changePercent, 0) / ratedStocks.length;
+    assert(Math.abs(sector.changePercent - parseFloat(mean.toFixed(2))) < 1e-9, 'Sector change is the mean of rated stocks');
+
+    // Drill-down + summary routes
+    const drill = await req('GET', '/api/v2/heatmap/sector/' + encodeURIComponent(sector.name));
+    assert(drill.status === 200 && drill.json.data.name === sector.name, 'Heatmap sector drilldown');
+    const missing = await req('GET', '/api/v2/heatmap/sector/NoSuchSector');
+    assert(missing.status === 404, 'Unknown sector returns 404');
+    const summary = await req('GET', '/api/v2/heatmap/sectors');
+    assert(summary.status === 200 && Array.isArray(summary.json.data) && summary.json.data.length > 0, 'Sector performance summary');
+    assert(summary.json.data.every(s => s.changePercent === null || typeof s.changePercent === 'number'), 'Sector summary values are numeric or null');
+
     child.kill();
     console.log(`\n========================================`);
     console.log(`RESULTS: ${passed} passed, ${failed} failed`);

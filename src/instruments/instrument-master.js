@@ -73,11 +73,23 @@ class InstrumentMaster {
     }
 
     /**
-     * Get instrument by exact symbol + exchange
+     * Get instrument by exact symbol + exchange.
+     *
+     * When no exchange is supplied the symbol alone is resolved. That is
+     * unambiguous — the master holds exactly one listing per symbol — and it
+     * prevents every symbol-only caller (order pricing, sector lookups) from
+     * silently receiving null.
      */
     getBySymbol(symbol, exchange) {
         const key = `${symbol}:${exchange || 'default'}`;
-        return this.instruments.get(key) || null;
+        const exact = this.instruments.get(key);
+        if (exact) return exact;
+        if (exchange) return null;
+
+        for (const inst of this.instruments.values()) {
+            if (inst.symbol === symbol) return inst;
+        }
+        return null;
     }
 
     /**

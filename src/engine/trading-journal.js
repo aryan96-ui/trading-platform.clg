@@ -41,14 +41,31 @@ class TradingJournal {
     /**
      * Close a trade and generate post-trade review
      */
-    closeTrade(email, tradeId, exitPrice) {
+    closeTrade(email, tradeId, exitPrice, context = {}) {
         const open = this.openTrades.get(email) || [];
         const idx = open.findIndex(t => t.id === tradeId);
         if (idx === -1) return null;
 
         const trade = open[idx];
-        open.splice(idx, 1);
-        this.openTrades.set(email, open);
+
+        // Partial closes: only the units being exited are resolved, and the
+        // remainder stays open with its fee share carried forward. Without
+        // this a scale-out would close the whole trade and misstate P&L.
+        const fullQuantity = trade.quantity;
+        const quantity = context.quantity ? Math.min(Number(context.quantity), fullQuantity) : fullQuantity;
+        if (!isFinite(quantity) || quantity <= 0) return null;
+        const isPartial = quantity < fullQuantity;
+        const feesForClose = isPartial
+            ? parseFloat((trade.fees * (quantity / fullQuantity)).toFixed(4))
+            : trade.fees;
+
+        if (isPartial) {
+            trade.quantity = fullQuantity - quantity;
+            trade.fees = parseFloat((trade.fees - feesForClose).toFixed(4));
+        } else {
+            open.splice(idx, 1);
+            this.openTrades.set(email, open);
+        }
 
         const closedAt = new Date();
         const openedAt = new Date(trade.openedAt);
@@ -56,32 +73,54 @@ class TradingJournal {
 
         // P&L calculation
         const pnl = trade.direction === 'long'
-            ? (exitPrice - trade.entryPrice) * trade.quantity - trade.fees
-            : (trade.entryPrice - exitPrice) * trade.quantity - trade.fees;
+            ? (exitPrice - trade.entryPrice) * quantity - feesForClose
+            : (trade.entryPrice - exitPrice) * quantity - feesForClose;
 
         // Risk taken (from stop loss or default 2x ATR proxy)
         const riskPerUnit = trade.stopLoss
             ? Math.abs(trade.entryPrice - trade.stopLoss)
             : trade.entryPrice * 0.02;
-        const riskTaken = riskPerUnit * trade.quantity;
-        const reward = Math.abs(exitPrice - trade.entryPrice) * trade.quantity;
+        const riskTaken = riskPerUnit * quantity;
+        const reward = Math.abs(exitPrice - trade.entryPrice) * quantity;
         const riskReward = riskTaken > 0 ? reward / riskTaken : 0;
 
-        // MFE/MAE simulation (based on the price path — simplified)
-        const maxFavorableExcursion = pnl > 0 ? pnl * (1 + Math.random() * 0.5) : pnl * 0.1;
-        const maxAdverseExcursion = pnl < 0 ? pnl * (1 + Math.random() * 0.5) : pnl * 0.1;
+        // MFE/MAE.
+        //
+        // Measured from the real bars covering the holding period when the
+        // caller supplies them. Otherwise the realised move is used, which is
+        // a true *lower bound* on the excursion (the path must at least
+        // include entry and exit). `excursionSource` records which it is so
+        // the UI never presents a bound as a measurement.
+        const excursions = context.excursions;
+        let maxFavorableExcursion, maxAdverseExcursion, excursionSource;
+        if (excursions && excursions.samples > 0 && excursions.mfe !== null) {
+            maxFavorableExcursion = excursions.mfe;
+            maxAdverseExcursion = excursions.mae;
+            excursionSource = 'bars';
+        } else {
+            maxFavorableExcursion = Math.max(0, pnl);
+            maxAdverseExcursion = Math.max(0, -pnl);
+            excursionSource = 'lower-bound (entry to exit only)';
+        }
 
         const closed = {
             ...trade,
             exitPrice,
+            quantity,
+            originalQuantity: fullQuantity,
+            partial: isPartial,
+            remainingQuantity: isPartial ? trade.quantity : 0,
+            fees: feesForClose,
             closedAt: closedAt.toISOString(),
             durationHours: parseFloat(durationHours.toFixed(2)),
             pnl: parseFloat(pnl.toFixed(2)),
-            pnlPercent: trade.entryPrice > 0 ? parseFloat(((pnl / (trade.entryPrice * trade.quantity)) * 100).toFixed(2)) : 0,
+            pnlPercent: trade.entryPrice > 0 ? parseFloat(((pnl / (trade.entryPrice * quantity)) * 100).toFixed(2)) : 0,
             riskTaken: parseFloat(riskTaken.toFixed(2)),
             riskReward: parseFloat(riskReward.toFixed(2)),
             maxFavorableExcursion: parseFloat(maxFavorableExcursion.toFixed(2)),
             maxAdverseExcursion: parseFloat(maxAdverseExcursion.toFixed(2)),
+            excursionSamples: excursions?.samples || 0,
+            excursionSource,
             marketRegime: trade.marketRegime || 'UNKNOWN',
             volume: trade.volume || 0,
             volatility: trade.volatility || 0,
