@@ -106,7 +106,7 @@ function renderStatusBar() {
     const now = new Date();
     const time = now.toLocaleTimeString('en-US', { hour12: false });
     const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const view = state.view || 'overview';
+    const view = state.view || 'dashboard';
     const instruments = state.instruments?.length || 0;
     bar.innerHTML = `
         <div class="item"><span class="dot" style="background:var(--green)"></span> Connected</div>

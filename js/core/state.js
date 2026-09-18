@@ -23,6 +23,12 @@ const state = {
     fills: [],
     accountError: null,
 
+    // ---- alert feed (owned by components/alerts) ----
+    alerts: { ranked: [], behaviors: [], error: null, at: null },
+
+    // ---- last AI analysis (owned by ai-copilot) ----
+    ai: { symbol: null, data: null },
+
     // ---- chrome ----
     dock: { tab: 'openOrders', collapsed: false },
     rightPane: 'aiPane',

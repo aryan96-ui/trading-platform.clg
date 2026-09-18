@@ -193,38 +193,8 @@ function renderSidebarOrders() {
         </div>`).join('');
 }
 
-// ========================================
-// ALERTS — ranked signals + behavioural flags
-// ========================================
-async function renderSidebarAlerts() {
-    const el = $('sideAlerts');
-    if (!el) return;
-    const [sig, beh] = await Promise.all([
-        api('/api/signals/ranked', 'POST', { context: { symbols: state.instruments.slice(0, 12).map(i => i.symbol) } }),
-        api('/api/trader/behavior?email=' + encodeURIComponent(state.email))
-    ]);
-
-    const signals = sig.success ? (sig.data.signals || sig.data || []).slice(0, 4) : [];
-    const behaviours = beh.success ? (beh.data.behaviors || []) : [];
-    const count = $('alertCount');
-    if (count) count.textContent = String(signals.length + behaviours.length);
-
-    const rows = [];
-
-    behaviours.slice(0, 2).forEach(b => rows.push(`
-        <div class="mini-row" style="grid-template-columns:1fr" onclick="switchView('behavior')">
-            <span style="font-size:11px;color:${b.severity === 'HIGH' ? 'var(--red)' : 'var(--orange)'}">⚠ ${escapeHtml(b.label || b.type)}</span>
-        </div>`));
-
-    signals.forEach(s => rows.push(`
-        <div class="mini-row" style="grid-template-columns:1fr auto" onclick="selectSymbol('${s.symbol}')">
-            <span class="sym">${s.symbol} <span class="dim" style="font-weight:400">${escapeHtml((s.label || s.type || '').slice(0, 22))}</span></span>
-            <span class="val">${s.quality != null ? Math.round(s.quality) : '—'}</span>
-        </div>`));
-
-    el.innerHTML = rows.length ? rows.join('')
-        : '<div class="mini-empty">No active alerts</div>';
-}
+// The alerts section is rendered by components/alerts, which owns the feed
+// (`state.alerts`) for both the sidebar and the right-hand Alerts pane.
 
 function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

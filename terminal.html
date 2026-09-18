@@ -11,82 +11,92 @@
 </head>
 <body>
 
-<!-- ================= TOP NAVBAR ================= -->
-<div class="topbar">
-    <div class="logo">PRO<span>TRADER</span></div>
+<div class="platform">
 
-    <div class="search-box" id="globalSearch">
-        <span style="font-size:14px">🔍</span>
-        <input id="searchInput" placeholder="Search symbol, company, or command…" onkeydown="handleSearchKey(event)" autocomplete="off">
-        <span class="kbd">Ctrl+K</span>
-    </div>
+    <!-- ================= TOP NAVBAR ================= -->
+    <header class="topbar">
+        <div class="logo">PRO<span>TRADER</span></div>
 
-    <div class="navbar" id="navbar"></div>
+        <div class="search-box" id="globalSearch">
+            <span style="font-size:14px">🔍</span>
+            <input id="searchInput" placeholder="Search symbol, company, or command…" onkeydown="handleSearchKey(event)" autocomplete="off">
+            <span class="kbd">Ctrl+K</span>
+        </div>
 
-    <div class="status-pill" id="statusPill"><span class="status-dot" id="statusDot"></span><span id="statusText">Connecting…</span></div>
+        <nav class="navbar" id="navbar"></nav>
 
-    <div class="profile-chip" title="Paper trading account" onclick="switchView('portfolio')">
-        <span>👤</span>
-        <span id="profileEmail">demo@college.com</span>
-        <span class="mono" id="profileEquity">—</span>
-    </div>
-</div>
+        <div class="status-pill" id="statusPill"><span class="status-dot" id="statusDot"></span><span id="statusText">Connecting…</span></div>
 
-<!-- ================= BODY ================= -->
-<div class="body-row">
+        <div class="profile-chip" title="Paper trading account" onclick="switchView('portfolio')">
+            <span>👤</span>
+            <span id="profileEmail">demo@college.com</span>
+            <span class="mono" id="profileEquity">—</span>
+        </div>
+    </header>
 
-    <!-- LEFT SIDEBAR -->
-    <aside class="sidebar" id="sidebar"></aside>
+    <!-- ================= BODY: SIDEBAR | WORKSPACE | INTELLIGENCE ================= -->
+    <div class="body-row">
 
-    <!-- WORKSPACE -->
-    <div class="workspace">
-        <main class="center-col" id="centerPanel"></main>
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="resizer" id="sidebarResizer" title="Drag to resize"></div>
 
-        <!-- RIGHT INTELLIGENCE PANEL -->
-        <aside class="right-col" id="rightCol">
-            <div class="tabstrip" id="rightTabs">
-                <div class="tab active" data-pane="aiPane" onclick="rightTab('aiPane')">🤖 AI Copilot</div>
-                <div class="tab" data-pane="tapePane" onclick="rightTab('tapePane')">📡 Tape</div>
-                <div class="tab" data-pane="alertsPane" onclick="rightTab('alertsPane')">🔔 Alerts</div>
-            </div>
+        <div class="workspace">
+            <main class="center-col" id="centerPanel"></main>
 
-            <div class="tabpane" id="aiPane">
-                <div class="card" style="margin-bottom:10px">
-                    <h4>🎯 <span id="aiSymbol">Select a symbol</span> <span class="badge blue" id="aiMode" style="margin-left:auto">rule-engine</span></h4>
-                    <div id="aiResponse"><div class="ai-response" style="color:var(--text-muted)">Click any instrument to generate an analysis with full evidence.</div></div>
-                    <div id="aiEvidence"></div>
+            <aside class="right-col" id="rightCol">
+                <div class="tabstrip" id="rightTabs">
+                    <div class="tab active" data-pane="aiPane" onclick="rightTab('aiPane')">🤖 AI</div>
+                    <div class="tab" data-pane="tapePane" onclick="rightTab('tapePane')">📡 Tape</div>
+                    <div class="tab" data-pane="alertsPane" onclick="rightTab('alertsPane')">🔔 Alerts</div>
                 </div>
-                <div id="aiExtras"></div>
-            </div>
 
-            <div class="tabpane hidden" id="tapePane">
-                <div class="card">
-                    <h4>📡 MARKET TAPE <span class="badge" id="tapePauseBadge" style="display:none">paused</span></h4>
-                    <div style="display:flex;gap:6px;margin-bottom:10px">
-                        <button class="btn small" onclick="toggleTapePause()" id="tapePauseBtn">⏸ Pause</button>
-                        <button class="btn small" onclick="toggleTapeAnomalies()" id="tapeAnomBtn">🔍 Anomalies</button>
-                        <button class="btn small" onclick="toggleTapeLarge()" id="tapeLargeBtn">📣 Large</button>
+                <div class="tabpane" id="aiPane">
+                    <div class="card" style="margin-bottom:10px">
+                        <h4>🎯 <span id="aiSymbol">Select a symbol</span> <span class="badge blue" id="aiMode" style="margin-left:auto">rule-engine</span></h4>
+                        <div id="aiResponse"><div class="ai-response" style="color:var(--text-muted)">Click any instrument to generate an analysis with full evidence.</div></div>
+                        <div id="aiEvidence"></div>
                     </div>
-                    <div id="tape"></div>
+                    <div id="aiExtras"></div>
                 </div>
-            </div>
 
-            <div class="tabpane hidden" id="alertsPane">
-                <div id="alertsBody"><div class="mini-empty">Loading alerts…</div></div>
-            </div>
-        </aside>
+                <div class="tabpane hidden" id="tapePane">
+                    <div class="card">
+                        <h4>📡 MARKET TAPE <span class="badge" id="tapePauseBadge" style="display:none">paused</span></h4>
+                        <div style="display:flex;gap:6px;margin-bottom:10px">
+                            <button class="btn small" onclick="toggleTapePause()" id="tapePauseBtn">⏸ Pause</button>
+                            <button class="btn small" onclick="toggleTapeAnomalies()" id="tapeAnomBtn">🔍 Anomalies</button>
+                            <button class="btn small" onclick="toggleTapeLarge()" id="tapeLargeBtn">📣 Large</button>
+                        </div>
+                        <div id="tape"></div>
+                    </div>
+                </div>
+
+                <div class="tabpane hidden" id="alertsPane">
+                    <div class="card">
+                        <h4>🔔 SIGNAL ALERTS <span class="badge blue" id="alertPaneCount" style="margin-left:auto">0</span></h4>
+                        <div id="alertsList"><div class="mini-empty">Loading…</div></div>
+                    </div>
+                    <div class="card">
+                        <h4>🧠 BEHAVIOUR FLAGS</h4>
+                        <div id="alertsBehavior"><div class="mini-empty">Loading…</div></div>
+                    </div>
+                </div>
+            </aside>
+        </div>
     </div>
+
+    <!-- ================= BOTTOM DOCK ================= -->
+    <div class="resizer-h" id="dockResizer" title="Drag to resize"></div>
+    <section class="dock" id="dock">
+        <div class="dock-head" id="dockHead"></div>
+        <div class="dock-body" id="dockBody"></div>
+    </section>
+
+    <!-- ================= TICKER + STATUS ================= -->
+    <div class="ticker"><div class="ticker-track" id="ticker"></div></div>
+    <div class="status-bar"></div>
+
 </div>
-
-<!-- ================= BOTTOM DOCK ================= -->
-<div class="resizer-h" id="dockResizer"></div>
-<section class="dock" id="dock">
-    <div class="dock-head" id="dockHead"></div>
-    <div class="dock-body" id="dockBody"></div>
-</section>
-
-<!-- ================= TICKER ================= -->
-<div class="ticker"><div class="ticker-track" id="ticker"></div></div>
 
 <!-- ================= TOASTS ================= -->
 <div class="toast-container"></div>
@@ -104,16 +114,18 @@
 <script src="js/core/api.js"></script>
 <script src="js/core/ui.js"></script>
 <script src="js/core/nav.js"></script>
+<script src="js/core/account.js"></script>
 <script src="js/watchlist/watchlist.js"></script>
 <script src="js/components/tape.js"></script>
 <script src="js/components/palette.js"></script>
 <script src="js/components/sidebar.js"></script>
-<script src="js/components/right-panel.js"></script>
+<script src="js/components/alerts.js"></script>
 <script src="js/chart/chart.js"></script>
 <script src="js/orders/orders.js"></script>
-<script src="js/portfolio/portfolio.js"></script>
-<script src="js/market-overview/overview.js"></script>
+<script src="js/orders/dock.js"></script>
+<script src="js/market-overview/dashboard.js"></script>
 <script src="js/market-overview/markets.js"></script>
+<script src="js/portfolio/portfolio.js"></script>
 <script src="js/heatmap/heatmap.js"></script>
 <script src="js/signals/signals.js"></script>
 <script src="js/views/screener.js"></script>

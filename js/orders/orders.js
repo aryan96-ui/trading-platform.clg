@@ -171,6 +171,9 @@ async function ticketReview(afterBlock) {
     const { risk, guardrail } = r.data;
     const blocks = (guardrail?.blocks || []);
     const warns = (guardrail?.warnings || []).concat(risk?.findings?.filter(f => f.level === 'MODERATE') || []);
+    // Guardrail warnings carry `message`; risk findings carry `factor` + `detail`.
+    const warnText = (w) => w.message || (w.factor ? `${w.factor}: ${w.detail}` : '') || w.type || '';
+    const warnNote = (w) => (w.message && w.evidence ? w.evidence : '');
     const levelColor = risk?.riskLevel === 'HIGH' ? 'var(--red)' : risk?.riskLevel === 'MODERATE' ? 'var(--orange)' : 'var(--green)';
 
     host.innerHTML = `
@@ -181,7 +184,7 @@ async function ticketReview(afterBlock) {
             <div class="w">Portfolio risk <b style="color:${levelColor}">${risk?.riskLevel || 'UNKNOWN'}</b>
                 ${risk?.positionWeight != null ? `· this position would be <b>${risk.positionWeight}%</b> of the account` : ''}</div>
             ${blocks.map(b => `<div class="w">• <b>${escapeHtml(b.message)}</b><br><span class="dim" style="font-size:10.5px">${escapeHtml(b.evidence || '')}</span></div>`).join('')}
-            ${warns.slice(0, 4).map(w => `<div class="w dim" style="font-size:10.5px">• ${escapeHtml(w.message)}</div>`).join('')}
+            ${warns.slice(0, 4).map(w => `<div class="w dim" style="font-size:10.5px">• ${escapeHtml(warnText(w))}${warnNote(w) ? ` <span class="dim">(${escapeHtml(warnNote(w))})</span>` : ''}</div>`).join('')}
             ${blocks.length ? `
                 <div style="font-size:10.5px;color:var(--text-secondary)">Reason for this trade?</div>
                 <div class="reason-opts" id="reasonOpts">
@@ -237,7 +240,8 @@ async function ticketSubmit(force) {
         captureThesis(o);
         const host = $('ticketCheck');
         if (host) host.innerHTML = '';
-        dockTab('openOrders');
+        dockTab('orderHistory');
+        renderChartPosition();
         return;
     }
 

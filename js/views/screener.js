@@ -24,12 +24,11 @@ async function renderScreener() {
         </div>`;
 
     state.filterDefs = allDefs;
-    if (!state.filterRowsInitialized) {
-        state.filterRowsInitialized = true;
-        renderFilterRows();
-    } else {
-        renderFilterRows();
-    }
+    renderFilterRows();
+
+    // A palette screen shortcut sets this flag before switching here, so the
+    // run happens after the results container exists — no timer race.
+    if (state.pendingScreen) { state.pendingScreen = false; runScreen(); }
 }
 
 function renderFilterRows() {

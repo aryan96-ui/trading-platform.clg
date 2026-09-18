@@ -9,6 +9,7 @@ async function refreshTape() {
     if (state.tape.anomaliesOnly) params.set('anomaliesOnly', 'true');
     if (state.tape.largeOnly) params.set('largePrintsOnly', 'true');
     const r = await api('/api/v2/tape?' + params);
+    if (r.success) state.tape.entries = r.data;   // cached for the dashboard tape widget
     if (r.success && r.data.length) {
         const el = $('tape');
         if (!el) return;

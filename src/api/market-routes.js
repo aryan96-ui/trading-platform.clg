@@ -7,6 +7,7 @@
  */
 const express = require('express');
 const router = express.Router();
+const indicatorSeries = require('../engine/indicator-series');
 
 module.exports = function createMarketRoutes(gateway, instrumentMaster, marketStream) {
     /**
@@ -57,6 +58,34 @@ module.exports = function createMarketRoutes(gateway, instrumentMaster, marketSt
             res.json({ success: true, data: candles, meta: { symbol, interval, count: candles.length } });
         } catch (error) {
             res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    /**
+     * GET /api/v2/indicators/:symbol
+     * Indicator series for chart overlays and sub-panes.
+     *
+     * Computed here, from the same gateway candles the history endpoint returns,
+     * using the same IndicatorEngine the screener and AI context builder use —
+     * so a value drawn on the chart cannot disagree with a screener filter.
+     * Query params: exchange, interval, limit, overlays (ema20,ema50,bb), sub (rsi|macd)
+     */
+    router.get('/indicators/:symbol', async (req, res) => {
+        try {
+            const { symbol } = req.params;
+            const { exchange, interval = '1D', limit = 200, overlays = '', sub = '' } = req.query;
+            const candles = await gateway.getHistory(symbol, exchange, interval, parseInt(limit));
+            const data = indicatorSeries.build(candles, {
+                overlays: String(overlays).split(',').map(s => s.trim()).filter(Boolean),
+                sub: sub || null
+            });
+            res.json({
+                success: true,
+                data,
+                meta: { symbol, interval, bars: data.bars, source: data.source }
+            });
+        } catch (error) {
+            res.status(503).json({ success: false, error: `Indicators unavailable: ${error.message}` });
         }
     });
 

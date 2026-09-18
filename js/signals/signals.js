@@ -4,11 +4,15 @@
  * Split from the terminal monolith; behaviour unchanged.
  */
 // ==================== SIGNALS (ranked + conflict) ====================
-async function renderSignals() {
-    const p = $('centerPanel');
-    p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Loading signal radar...</div>';
-    // Build candidate signals from the actual current quote stream (labeled by feed)
-    const symbols = state.instruments.slice(0, 18).map(i => i.symbol);
+
+/**
+ * Fetch quotes and rank the moves as signals. One owner of signal shaping:
+ * the signals view, the dashboard widget and the alert feed all call this, so
+ * a signal is scored the same everywhere.
+ */
+async function fetchRankedSignals(symbols = []) {
+    if (!symbols.length) return { quotes: [], ranked: [], alerts: null, error: 'No symbols to scan' };
+
     const q = await api('/api/v2/quotes?symbols=' + symbols.join(','));
     const quotes = q.success ? q.data : [];
     const signals = quotes
@@ -24,14 +28,26 @@ async function renderSignals() {
             created: new Date().toISOString(),
             evidenceFrom: x.dataQuality || x.source || 'live'
         }));
-    if (!signals.length) {
+
+    if (!signals.length) return { quotes, ranked: [], alerts: null };
+
+    const ctx = { regime: {}, watchlist: symbols.slice(0, 8), portfolioSymbols: state.quotes && Object.keys(state.quotes) };
+    const r = await api('/api/signals/ranked', 'POST', { signals, context: ctx });
+    if (!r.success) return { quotes, ranked: [], alerts: null, error: r.error };
+    return { quotes, ranked: r.data.ranked, alerts: r.data.alerts };
+}
+
+async function renderSignals() {
+    const p = $('centerPanel');
+    p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Loading signal radar...</div>';
+    const symbols = state.instruments.slice(0, 18).map(i => i.symbol);
+    const { quotes, ranked, alerts, error } = await fetchRankedSignals(symbols);
+
+    if (error) { p.innerHTML = `<div style="padding:20px;color:var(--red)">${escapeHtml(error)}</div>`; return; }
+    if (!ranked.length) {
         p.innerHTML = '<div style="padding:20px;color:var(--text-muted)">No qualifying moves right now — wait for the next quote refresh or lower the move threshold.</div>';
         return;
     }
-    const ctx = { regime: {}, watchlist: symbols.slice(0, 8), portfolioSymbols: state.quotes && Object.keys(state.quotes) };
-    const r = await api('/api/signals/ranked', 'POST', { signals, context: ctx });
-    if (!r.success) { p.innerHTML = `<div style="color:var(--red)">${r.error}</div>`; return; }
-    const { ranked, alerts } = r.data;
 
     const tierBadge = (t) => t === 'TOP_PRIORITY' ? '<span class="badge green">TOP</span>' : t === 'MEDIUM' ? '<span class="badge orange">MED</span>' : '<span class="badge blue">LOW</span>';
     const bars = (s) => `

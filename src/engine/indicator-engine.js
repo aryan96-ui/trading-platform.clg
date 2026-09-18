@@ -100,26 +100,50 @@ class IndicatorEngine {
 
     /** Simple moving average of the last `period` values (null if too short). */
     static sma(values, period) {
-        if (!Array.isArray(values) || values.length < period || period <= 0) return null;
-        const slice = values.slice(-period);
-        const sum = slice.reduce((a, v) => a + v, 0);
-        return sum / period;
+        const series = IndicatorEngine.smaSeries(values, period);
+        return series[series.length - 1] ?? null;
+    }
+
+    /** SMA at every bar that has a full window — the chart's series form. */
+    static smaSeries(values, period) {
+        const out = Array.isArray(values) ? new Array(values.length).fill(null) : [];
+        if (!Array.isArray(values) || values.length < period || period <= 0) return out;
+        for (let i = period - 1; i < values.length; i++) {
+            out[i] = values.slice(i - period + 1, i + 1).reduce((a, v) => a + v, 0) / period;
+        }
+        return out;
     }
 
     /** Exponential moving average (seeded with an SMA, Wilder-style start). */
     static ema(values, period) {
-        if (!Array.isArray(values) || values.length < period || period <= 0) return null;
+        const series = IndicatorEngine.emaSeries(values, period);
+        return series[series.length - 1] ?? null;
+    }
+
+    /** EMA at every bar from the seed onward — the chart's overlay form. */
+    static emaSeries(values, period) {
+        const out = Array.isArray(values) ? new Array(values.length).fill(null) : [];
+        if (!Array.isArray(values) || values.length < period || period <= 0) return out;
         const k = 2 / (period + 1);
         let ema = values.slice(0, period).reduce((a, v) => a + v, 0) / period;
+        out[period - 1] = ema;
         for (let i = period; i < values.length; i++) {
             ema = values[i] * k + ema * (1 - k);
+            out[i] = ema;
         }
-        return ema;
+        return out;
     }
 
     /** Wilder's RSI over `period` (default 14). */
     static rsi(closes, period = 14) {
-        if (!Array.isArray(closes) || closes.length < period + 1) return null;
+        const series = IndicatorEngine.rsiSeries(closes, period);
+        return series[series.length - 1] ?? null;
+    }
+
+    /** RSI at every bar — same Wilder recursion, kept in one place. */
+    static rsiSeries(closes, period = 14) {
+        const out = Array.isArray(closes) ? new Array(closes.length).fill(null) : [];
+        if (!Array.isArray(closes) || closes.length < period + 1) return out;
 
         let gain = 0, loss = 0;
         for (let i = 1; i <= period; i++) {
@@ -128,6 +152,7 @@ class IndicatorEngine {
         }
         let avgGain = gain / period;
         let avgLoss = loss / period;
+        out[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
 
         for (let i = period + 1; i < closes.length; i++) {
             const diff = closes[i] - closes[i - 1];
@@ -135,11 +160,9 @@ class IndicatorEngine {
             const l = diff < 0 ? -diff : 0;
             avgGain = (avgGain * (period - 1) + g) / period;
             avgLoss = (avgLoss * (period - 1) + l) / period;
+            out[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
         }
-
-        if (avgLoss === 0) return 100;
-        const rs = avgGain / avgLoss;
-        return 100 - 100 / (1 + rs);
+        return out;
     }
 
     /** Wilder's ATR from candles (needs high/low/close). */
@@ -165,35 +188,68 @@ class IndicatorEngine {
 
     /** MACD line, signal line and histogram. */
     static macd(closes, fast = 12, slow = 26, signalPeriod = 9) {
-        if (!Array.isArray(closes) || closes.length < slow + signalPeriod) return null;
-        const line = IndicatorEngine.ema(closes, fast) - IndicatorEngine.ema(closes, slow);
-
-        // Build the MACD series for the signal EMA
-        const series = [];
-        for (let i = slow; i <= closes.length; i++) {
-            const window = closes.slice(0, i);
-            const f = IndicatorEngine.ema(window, fast);
-            const s = IndicatorEngine.ema(window, slow);
-            if (f !== null && s !== null) series.push(f - s);
-        }
-        const signal = IndicatorEngine.ema(series, signalPeriod);
-        if (signal === null) return null;
-
+        const series = IndicatorEngine.macdSeries(closes, fast, slow, signalPeriod);
+        const line = series.macd[series.macd.length - 1];
+        const signal = series.signal[series.signal.length - 1];
+        if (line === null || line === undefined || signal === null || signal === undefined) return null;
         return { line, signal, histogram: line - signal };
+    }
+
+    /** MACD line, signal and histogram at every bar — the sub-pane's series form. */
+    static macdSeries(closes, fast = 12, slow = 26, signalPeriod = 9) {
+        const empty = { macd: [], signal: [], histogram: [] };
+        if (!Array.isArray(closes) || closes.length < slow + signalPeriod) return empty;
+
+        const fastSeries = IndicatorEngine.emaSeries(closes, fast);
+        const slowSeries = IndicatorEngine.emaSeries(closes, slow);
+        const macd = closes.map((_, i) =>
+            fastSeries[i] === null || slowSeries[i] === null ? null : fastSeries[i] - slowSeries[i]);
+
+        // Signal EMA runs over the contiguous MACD values only, then maps back.
+        const firstIndex = macd.findIndex(v => v !== null);
+        const compact = macd.filter(v => v !== null);
+        const signalCompact = IndicatorEngine.emaSeries(compact, signalPeriod);
+
+        const signal = new Array(closes.length).fill(null);
+        const histogram = new Array(closes.length).fill(null);
+        for (let k = 0; k < compact.length; k++) {
+            const i = firstIndex + k;
+            signal[i] = signalCompact[k];
+            if (signalCompact[k] !== null) histogram[i] = macd[i] - signalCompact[k];
+        }
+
+        return { macd, signal, histogram };
     }
 
     /** Bollinger bands plus where price sits inside them (0-100). */
     static bollinger(closes, period = 20, mult = 2) {
-        if (!Array.isArray(closes) || closes.length < period) return null;
-        const slice = closes.slice(-period);
-        const mean = slice.reduce((a, v) => a + v, 0) / period;
-        const variance = slice.reduce((a, v) => a + (v - mean) ** 2, 0) / period;
-        const sd = Math.sqrt(variance);
-        const upper = mean + mult * sd;
-        const lower = mean - mult * sd;
+        const bands = IndicatorEngine.bollingerSeries(closes, period, mult);
+        const last = bands.middle.length - 1;
+        const mean = bands.middle[last];
+        if (mean === null || mean === undefined) return null;
+        const upper = bands.upper[last];
+        const lower = bands.lower[last];
         const price = closes[closes.length - 1];
         const position = upper === lower ? 50 : ((price - lower) / (upper - lower)) * 100;
         return { upper, middle: mean, lower, position };
+    }
+
+    /** Bollinger bands at every bar — the chart's overlay form. */
+    static bollingerSeries(closes, period = 20, mult = 2) {
+        const length = Array.isArray(closes) ? closes.length : 0;
+        const out = { upper: new Array(length).fill(null), middle: new Array(length).fill(null), lower: new Array(length).fill(null) };
+        if (!Array.isArray(closes) || closes.length < period) return out;
+
+        for (let i = period - 1; i < closes.length; i++) {
+            const slice = closes.slice(i - period + 1, i + 1);
+            const mean = slice.reduce((a, v) => a + v, 0) / period;
+            const variance = slice.reduce((a, v) => a + (v - mean) ** 2, 0) / period;
+            const sd = Math.sqrt(variance);
+            out.middle[i] = mean;
+            out.upper[i] = mean + mult * sd;
+            out.lower[i] = mean - mult * sd;
+        }
+        return out;
     }
 
     /** Smoothed Stochastic %K. */

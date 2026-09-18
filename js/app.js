@@ -1,50 +1,56 @@
 /**
  * ProTrader — app
  *
- * Split from the terminal monolith; behaviour unchanged.
+ * Bootstrap only: keyboard, chrome paint, poll loops. Navigation lives in
+ * core/nav (switchView), client state in core/state, account data in
+ * core/account. This file owns no view logic.
  */
-// ==================== VIEW SWITCHING ====================
-function switchView(view) {
-    state.view = view;
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
-    const center = $('centerPanel');
-    center.scrollTop = 0;
-    const views = {
-        overview: renderOverview, chart: renderChart, screener: renderScreener, heatmap: renderHeatmap,
-        signals: renderSignals, regime: renderRegime, behavior: renderBehavior,
-        risk: renderRisk, strategies: renderStrategies, claims: renderClaims,
-        reviews: renderReviews, ai: renderAI, journal: renderJournal
-    };
-    (views[view] || renderOverview)();
+
+const KEY_VIEWS = ['dashboard', 'chart', 'markets', 'screener', 'heatmap', 'signals', 'strategies', 'portfolio', 'risk'];
+
+function isTyping() {
+    const a = document.activeElement;
+    return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT');
 }
 
-// ==================== INIT ====================
 document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); }
-    if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); openShortcuts(); }
-    if (e.key === 'Escape') { closePalette(); closeShortcuts(); }
-    if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
-        e.preventDefault(); $('searchInput').focus(); }
-    if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
-        e.preventDefault(); switchView(state.view); showToast('View refreshed', 'info', 1500); }
-    // Number keys 1-9 switch tabs
-    if (!e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
-        const views = ['overview','chart','screener','heatmap','signals','regime','behavior','risk','strategies'];
-        const num = parseInt(e.key);
-        if (num >= 1 && num <= views.length) { switchView(views[num-1]); }
-    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); return openPalette(); }
+    if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); return openShortcuts(); }
+    if (e.key === 'Escape') { closePalette(); closeShortcuts(); return; }
+    if (isTyping()) return;
+
+    const k = e.key.toLowerCase();
+    if (k === 's') { e.preventDefault(); $('searchInput')?.focus(); return; }
+    if (k === 'r') { e.preventDefault(); switchView(state.view); showToast('View refreshed', 'info', 1500); return; }
+
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= KEY_VIEWS.length) switchView(KEY_VIEWS[n - 1]);
 });
 
-(async function init() {
-    refreshStatus();
-    loadWatchlist();
-    switchView('overview');
-    refreshTape();
+/** Paint everything that is not the centre view, then start the loops. */
+async function boot() {
+    renderNav();
+    renderSidebar();
+    renderProfileChip();
+    renderDock();
     renderStatusBar();
     initResizers();
-    // Poll
+
+    await loadWatchlist();
+    switchView('dashboard');
+
+    refreshAccountData();
+    refreshAnalytics();
+    loadAlerts();
+    refreshTape();
+    refreshStatus();
+
     setInterval(refreshQuotes, 5000);
     setInterval(refreshTape, 4000);
+    setInterval(refreshAccountData, 15000);
+    setInterval(loadAlerts, 45000);
     setInterval(refreshStatus, 30000);
     setInterval(renderStatusBar, 1000);
-})();
+}
+
+boot();
