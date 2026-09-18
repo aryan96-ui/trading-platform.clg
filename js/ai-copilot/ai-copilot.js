@@ -67,17 +67,6 @@ function aiEvidenceHtml(d) {
         </div>`;
 }
 
-/** Right-panel view: focus the AI pane on the selected symbol. */
-async function renderAI() {
-    rightTab('aiPane');
-    const symbol = state.selectedSymbol || state.instruments[0]?.symbol;
-    if (!symbol) {
-        $('aiResponse').innerHTML = '<div class="ai-response" style="color:var(--text-muted)">No instrument available to analyse.</div>';
-        return;
-    }
-    await analyzeSymbol(symbol);
-}
-
 /** Centre view: the AI workspace — analysis, evidence and a symbol switcher. */
 async function openAiView() {
     const p = $('centerPanel');

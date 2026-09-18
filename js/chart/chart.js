@@ -267,7 +267,7 @@ async function loadChartData(symbol, interval) {
     });
 
     resizeCharts();
-    window.addEventListener('resize', resizeCharts);
+    bindResize();
 }
 
 /** RSI / MACD pane below the price chart, time-synced to it. */
@@ -335,6 +335,23 @@ function destroyChart() {
 }
 function destroySubChart() {
     if (_subChart) { try { _subChart.remove(); } catch (e) { /* already gone */ } _subChart = null; }
+}
+
+/**
+ * The window resize handler is bound exactly once for the page's lifetime.
+ * Binding it per render (view switch, symbol change, interval change, overlay
+ * toggle) accumulated one listener per render, and a resize drag fired
+ * applyOptions on every event. Throttled to one frame via requestAnimationFrame.
+ */
+let _resizeBound = false;
+let _resizeFrame = null;
+function bindResize() {
+    if (_resizeBound) return;
+    _resizeBound = true;
+    window.addEventListener('resize', () => {
+        if (_resizeFrame) return;
+        _resizeFrame = requestAnimationFrame(() => { _resizeFrame = null; resizeCharts(); });
+    });
 }
 
 /** Called by the layout resizers and on window resize. */

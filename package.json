@@ -1,20 +1,20 @@
 {
-    "name": "academic-trading-platform",
+    "name": "protrader",
     "version": "1.0.0",
-    "description": "College project - Paper trading platform",
-    "main": "server.js",
+    "description": "ProTrader - AI-driven trading and transaction analytics platform: market-data gateway, paper-trading broker and a 25-engine decision-intelligence layer",
+    "main": "server-v2.js",
     "scripts": {
-        "start": "node server.js",
-        "dev": "nodemon server.js",
-        "dev-no-db": "nodemon server-no-db.js",
-        "start:v2": "node server-v2.js",
-        "dev:v2": "nodemon server-v2.js"
+        "start": "node server-v2.js",
+        "dev": "nodemon server-v2.js",
+        "start:v1": "node server.js",
+        "dev:v1": "nodemon server.js",
+        "test": "node test-indicators.js && node test-indicator-series.js && node test-heatmap.js && node test-trading.js && node test-intelligence.js && node test-intel-server.js",
+        "test:route": "node test-pre-check-route.js"
     },
     "dependencies": {
         "axios": "^1.13.2",
         "body-parser": "^1.20.4",
         "cors": "^2.8.5",
-        "crypto": "^1.0.1",
         "dotenv": "^16.4.5",
         "express": "^4.22.1",
         "mongoose": "^8.0.0",
@@ -24,7 +24,13 @@
     "devDependencies": {
         "nodemon": "^3.1.11"
     },
-    "keywords": [],
+    "keywords": [
+        "trading",
+        "market-data",
+        "paper-trading",
+        "risk-management",
+        "analytics"
+    ],
     "author": "",
     "license": "ISC",
     "type": "commonjs"

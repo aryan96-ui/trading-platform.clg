@@ -36,9 +36,7 @@ const state = {
         type: 'candles',       // candles | line | area
         interval: '1D',
         overlays: { ema20: true, ema50: true, bb: false },
-        sub: 'volume',         // volume | rsi | macd
-        drawing: false,
-        lines: []
+        sub: 'volume'          // volume | rsi | macd
     },
     widgets: {}                // widget id → false when collapsed
 };

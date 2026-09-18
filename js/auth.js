@@ -34,7 +34,7 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
                 localStorage.setItem('userEmail', data.user.email);
                 localStorage.setItem('userBalance', data.user.balance);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                window.location.href = 'dashboard-standalone.html';
+                window.location.href = 'terminal.html';
             }
         } else {
             const messageContainer = document.getElementById('message-container') || document.getElementById('message');
