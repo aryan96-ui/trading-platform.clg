@@ -640,10 +640,15 @@ running server in DEMO mode on this machine (`http.request` timing, server-rende
 | `GET /api/v2/heatmap` (full sector breadth) | **2 ms** (1–5) |
 | `GET /api/v2/overview` | **1 ms** (0–2) |
 | `POST /api/v2/screen` (RSI filter over the universe) | **105 ms** (100–110) |
-| Cold stock/forex/index request (server-side total) | 3–28 ms (was 650–800 ms pre-fix) |
-| `GET /api/v2/quotes` (5 mixed symbols incl. crypto) | ~500 ms cold (upstream crypto round trip), cached thereafter |
-| Dashboard render (9 widgets, 4 parallel API calls) | ~500 ms to painted |
-| View switch (per view) | 420–515 ms wall-clock including its own fetches |
+| Cold stock/forex/index request (server-side total) | 3–28 ms (was 650–800 ms pre-fix) — measured in the earlier gateway-routing pass, not re-measured here |
+| `GET /api/v2/quotes` (5 mixed symbols incl. crypto) | ~500 ms cold (upstream crypto round trip), cached thereafter — earlier-pass measurement, not re-measured here |
+
+> **Caveat on all of the above:** these are wall-clock figures on one developer machine in DEMO
+> mode, not a benchmark suite. They are warm-cache unless stated. An earlier revision of this
+> report quoted 420–515 ms for view switching; that was a cold first-load figure and is
+> misleading as a steady-state number, so it is corrected here.
+| View switch (warm, wall-clock incl. its own fetches) | **53–60 ms** across dashboard/chart/signals/journal/portfolio (`performance.now()` in the live page) |
+| Dashboard → 9 widgets painted (warm) | **~52 ms** |
 | `terminal.html` payload | **6.8 KB** (142 lines) + 2 stylesheets (37 KB: `platform.css` 13.9 KB, `terminal.css` 23.4 KB) |
 | Workspace DOM nodes | **852** measured on the chart view (canvas-rendered chart excluded — it is not DOM) |
 | Client scripts loaded | 28 modules (29 `<script>` tags including one inline) |
