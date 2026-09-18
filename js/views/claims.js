@@ -16,8 +16,10 @@ async function renderClaims() {
             <div class="section-title">Finfluencer Claim Verification — evidence, not authority</div>
             <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Paste any market claim. ProTrader extracts verifiable statements and compares them against available data. Claims that cannot be checked are reported as INSUFFICIENT DATA — never assumed.</div>
             <div class="card" style="border-color:var(--border-accent)">
-                <textarea id="claimText" rows="2" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:8px;font-family:var(--font-sans);font-size:12px;resize:vertical"></textarea>
+                <textarea id="claimText" rows="2" placeholder="e.g. TCS is oversold right now and ready to bounce" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:8px;font-family:var(--font-sans);font-size:12px;resize:vertical"></textarea>
                 <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:11px;color:var(--text-secondary)">Symbol:</span>
+                    <input id="claimSymbol" placeholder="auto-detect" style="width:130px;text-transform:uppercase;background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text-primary)">
                     <span style="font-size:11px;color:var(--text-secondary)">Examples:</span>
                     ${examples.map((e, i) => `<button class="btn small" onclick="loadClaim(${i})">${e.split(' ').slice(0,2).join(' ')}…</button>`).join('')}
                     <button class="btn primary small" style="margin-left:auto" onclick="runClaimVerify()">🔎 Verify Claim</button>
@@ -46,8 +48,15 @@ async function runClaimVerify() {
     const text = $('claimText').value.trim();
     if (!text) { el.innerHTML = '<div style="color:var(--orange)">Enter a claim first.</div>'; return; }
     el.innerHTML = '<div style="color:var(--text-secondary)">Verifying against available data...</div>';
-    const m = text.match(/\b([A-Z]{2,6})\b/);
-    const symbol = m ? m[1] : 'RELIANCE';
+
+    // Symbol resolution order: explicit entry, then an instrument named in the
+    // claim that we actually know, then the selected symbol. Picking the first
+    // uppercase token blindly used to verify the word "RSI" instead of TCS.
+    const explicit = ($('claimSymbol')?.value || '').trim().toUpperCase();
+    const tokens = [...new Set(text.match(/\b[A-Z]{2,12}\b/g) || [])];
+    const known = tokens.find(t => state.instruments.some(i => i.symbol === t));
+    const symbol = explicit || known || state.selectedSymbol || state.instruments[0]?.symbol || 'RELIANCE';
+
     const q = await api('/api/v2/quotes?symbols=' + symbol);
     const quote = q.success && q.data.length ? q.data[0] : null;
     const r = await api('/api/claims/verify', 'POST', {
