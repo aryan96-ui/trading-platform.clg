@@ -1,331 +1,318 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProTrader - Advanced Multi-Asset Trading Platform</title>
-    <link rel="stylesheet" href="css/landing.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProTrader - Professional Options Trading Platform</title>
+  <link rel="stylesheet" href="css/landing.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <div class="logo-icon">📈</div>
-                <span class="logo-text">Pro<strong>Trader</strong></span>
-            </div>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <div class="logo-icon">&#x1F4C8;</div>
+        <span>Pro</strong>Trader</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#markets">Markets</a>
+        <a href="#trading">Trading</a>
+        <a href="pricing.html">Pricing</a>
+      </div>
+      <div class="nav-actions">
+        <a href="login.html" class="btn btn-ghost">Sign In</a>
+        <a href="login.html?register=true" class="btn btn-primary">Start Free</a>
+      </div>
+    </div>
+  </nav>
 
-            <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#trading">Trading</a>
-                <a href="#markets">Markets</a>
-                <a href="pricing.html">Premium</a>
-            </div>
-
-            <div class="nav-actions">
-                <a href="login.html" class="btn btn-ghost">Login</a>
-                <a href="login.html?register=1" class="btn btn-primary">Get Started</a>
-            </div>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          &#x1F3C6; Options Trading Platform
         </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-container">
-            <div class="hero-content">
-                <div class="hero-badge">
-                    <span class="badge-icon">🏆</span>
-                    <span>Award-Winning Trading Platform</span>
-                </div>
-
-                <h1 class="hero-title">
-                    Trade Smarter,<br>
-                    <span class="gradient-text">Profit Faster</span>
-                </h1>
-
-                <p class="hero-description">
-                    Access global markets with cutting-edge technology.
-                    Trade stocks, crypto, forex, and commodities with real-time data,
-                    advanced analytics, and zero commission.
-                </p>
-
-                <div class="hero-stats">
-                    <div class="stat-item">
-                        <div class="stat-number">50K+</div>
-                        <div class="stat-label">Active Traders</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">$2.5B</div>
-                        <div class="stat-label">Daily Volume</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">24/7</div>
-                        <div class="stat-label">Live Support</div>
-                    </div>
-                </div>
-
-                <div class="hero-cta">
-                    <a href="login.html?register=1" class="btn btn-primary btn-large">
-                        Start Trading Now
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                            <path
-                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" />
-                        </svg>
-                    </a>
-                    <a href="dashboard-pro.html" class="btn btn-ghost btn-large">
-                        Try Demo
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                            <path
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
-                        </svg>
-                    </a>
-                </div>
-
-                <div class="hero-trust">
-                    <p class="trust-text">Trusted by traders worldwide</p>
-                    <div class="trust-badges">
-                        <div class="badge">🔒 Secure</div>
-                        <div class="badge">✓ Regulated</div>
-                        <div class="badge">⚡ Fast</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="hero-image">
-                <div class="trading-card">
-                    <div class="card-header">
-                        <span class="card-title">Live Markets</span>
-                        <span class="card-status">● Online</span>
-                    </div>
-                    <div class="market-list">
-                        <div class="market-item">
-                            <div class="market-info">
-                                <span class="market-symbol">BTC/USD</span>
-                                <span class="market-name">Bitcoin</span>
-                            </div>
-                            <div class="market-data">
-                                <span class="market-price">$48,250</span>
-                                <span class="market-change positive">+2.45%</span>
-                            </div>
-                        </div>
-                        <div class="market-item">
-                            <div class="market-info">
-                                <span class="market-symbol">ETH/USD</span>
-                                <span class="market-name">Ethereum</span>
-                            </div>
-                            <div class="market-data">
-                                <span class="market-price">$3,253</span>
-                                <span class="market-change positive">+1.75%</span>
-                            </div>
-                        </div>
-                        <div class="market-item">
-                            <div class="market-info">
-                                <span class="market-symbol">AAPL</span>
-                                <span class="market-name">Apple Inc.</span>
-                            </div>
-                            <div class="market-data">
-                                <span class="market-price">$145.32</span>
-                                <span class="market-change positive">+1.23%</span>
-                            </div>
-                        </div>
-                        <div class="market-item">
-                            <div class="market-info">
-                                <span class="market-symbol">TSLA</span>
-                                <span class="market-name">Tesla Inc.</span>
-                            </div>
-                            <div class="market-data">
-                                <span class="market-price">$831.45</span>
-                                <span class="market-change negative">-2.67%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="floating-card card-1">
-                    <div class="mini-chart">
-                        <div class="chart-header">Portfolio</div>
-                        <div class="chart-value">+$12,458</div>
-                        <div class="chart-percent positive">+24.5%</div>
-                    </div>
-                </div>
-
-                <div class="floating-card card-2">
-                    <div class="notification-card">
-                        <div class="notif-icon">📊</div>
-                        <div class="notif-content">
-                            <div class="notif-title">Trade Executed</div>
-                            <div class="notif-desc">BTC Buy Order Filled</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <h1 class="hero-title">
+          Trade Options<br>
+          <span class="gradient-text">Like a Pro</span>
+        </h1>
+        <p class="hero-description">
+          Master options trading with real-time Greeks, options chain, IV analysis, and AI-powered signals. Practice with virtual capital before going live.
+        </p>
+        <div class="hero-cta">
+          <a href="login.html?register=true" class="btn btn-primary btn-large">
+            Start Trading Free &#x2192;
+          </a>
+          <a href="#features" class="btn btn-ghost btn-large">
+            Explore Features
+          </a>
         </div>
-
-        <div class="hero-glow"></div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Why Choose ProTrader</h2>
-                <p class="section-subtitle">Everything you need to succeed in trading</p>
-            </div>
-
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">Lightning Fast</h3>
-                    <p class="feature-desc">Execute trades in milliseconds with our advanced infrastructure</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3 class="feature-title">Advanced Charts</h3>
-                    <p class="feature-desc">Professional-grade charting tools and technical indicators</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h3 class="feature-title">AI-Powered</h3>
-                    <p class="feature-desc">Smart predictions and automated trading strategies</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3 class="feature-title">Bank-Level Security</h3>
-                    <p class="feature-desc">Your funds and data are protected with enterprise security</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">💰</div>
-                    <h3 class="feature-title">Zero Commission</h3>
-                    <p class="feature-desc">Trade without fees on stocks, crypto, and forex</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <h3 class="feature-title">Multi-Platform</h3>
-                    <p class="feature-desc">Trade anywhere on web, mobile, and desktop apps</p>
-                </div>
-            </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-number">50K+</div>
+            <div class="stat-label">Active Traders</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">&#8377;2.5B</div>
+            <div class="stat-label">Virtual Volume</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">100+</div>
+            <div class="stat-label">Options Chains</div>
+          </div>
         </div>
-    </section>
-
-    <!-- Markets Section -->
-    <section class="markets" id="markets">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Trade Across All Markets</h2>
-                <p class="section-subtitle">Access thousands of assets in one platform</p>
-            </div>
-
-            <div class="markets-grid">
-                <div class="market-card">
-                    <div class="market-card-icon">💹</div>
-                    <h3 class="market-card-title">Stocks</h3>
-                    <p class="market-card-desc">Trade top companies from global exchanges</p>
-                    <div class="market-card-count">5,000+ Stocks</div>
-                </div>
-
-                <div class="market-card">
-                    <div class="market-card-icon">₿</div>
-                    <h3 class="market-card-title">Crypto</h3>
-                    <p class="market-card-desc">Bitcoin, Ethereum, and 100+ cryptocurrencies</p>
-                    <div class="market-card-count">150+ Coins</div>
-                </div>
-
-                <div class="market-card">
-                    <div class="market-card-icon">💱</div>
-                    <h3 class="market-card-title">Forex</h3>
-                    <p class="market-card-desc">Major and exotic currency pairs with tight spreads</p>
-                    <div class="market-card-count">80+ Pairs</div>
-                </div>
-
-                <div class="market-card">
-                    <div class="market-card-icon">🛢️</div>
-                    <h3 class="market-card-title">Commodities</h3>
-                    <p class="market-card-desc">Gold, silver, oil, and agricultural products</p>
-                    <div class="market-card-count">30+ Commodities</div>
-                </div>
-            </div>
+        <div class="hero-trust">
+          <span class="trust-text">Trusted by</span>
+          <div class="trust-badges">
+            <span class="trust-badge">&#x1F512; SEBI Compliant</span>
+            <span class="trust-badge">&#x26A1; Real-time Data</span>
+            <span class="trust-badge">&#x1F4CA; 10+ Indicators</span>
+          </div>
         </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta-section">
-        <div class="container">
-            <div class="cta-content">
-                <h2 class="cta-title">Ready to Start Trading?</h2>
-                <p class="cta-description">Join thousands of traders already using ProTrader</p>
-                <div class="cta-buttons">
-                    <a href="login.html?register=1" class="btn btn-primary btn-large">
-                        Create Free Account
-                    </a>
-                    <a href="dashboard-pro.html" class="btn btn-ghost btn-large">
-                        Try Demo
-                    </a>
-                </div>
+      </div>
+      <div class="hero-visual">
+        <div class="trading-card">
+          <div class="card-header">
+            <h3>Live Markets</h3>
+            <span class="card-status">Online</span>
+          </div>
+          <div class="market-grid">
+            <div class="market-card">
+              <div class="market-card-header">
+                <span class="market-card-symbol">NIFTY 50</span>
+                <span class="market-card-badge stock">Index</span>
+              </div>
+              <div class="market-card-price">24,850.75</div>
+              <div class="market-card-change positive">+1.25%</div>
+              <div class="market-card-mini-chart" id="chart-nifty"></div>
             </div>
+            <div class="market-card">
+              <div class="market-card-header">
+                <span class="market-card-symbol">BANK NIFTY</span>
+                <span class="market-card-badge stock">Index</span>
+              </div>
+              <div class="market-card-price">52,430.20</div>
+              <div class="market-card-change positive">+0.85%</div>
+              <div class="market-card-mini-chart" id="chart-banknifty"></div>
+            </div>
+            <div class="market-card">
+              <div class="market-card-header">
+                <span class="market-card-symbol">BTC/INR</span>
+                <span class="market-card-badge crypto">Crypto</span>
+              </div>
+              <div class="market-card-price">&#8377;35,20,500</div>
+              <div class="market-card-change positive">+4.25%</div>
+              <div class="market-card-mini-chart" id="chart-btc"></div>
+            </div>
+            <div class="market-card">
+              <div class="market-card-header">
+                <span class="market-card-symbol">GOLD</span>
+                <span class="market-card-badge commodity">Commodity</span>
+              </div>
+              <div class="market-card-price">&#8377;72,450</div>
+              <div class="market-card-change negative">-0.45%</div>
+              <div class="market-card-mini-chart" id="chart-gold"></div>
+            </div>
+          </div>
         </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <div class="footer-logo">
-                        <div class="logo-icon">📈</div>
-                        <span class="logo-text">Pro<strong>Trader</strong></span>
-                    </div>
-                    <p class="footer-desc">Your gateway to professional trading</p>
-                </div>
-
-                <div class="footer-links">
-                    <div class="footer-column">
-                        <h4>Product</h4>
-                        <a href="#features">Features</a>
-                        <a href="pricing.html">Pricing</a>
-                        <a href="#markets">Markets</a>
-                        <a href="dashboard-pro.html">Platform</a>
-                    </div>
-
-                    <div class="footer-column">
-                        <h4>Company</h4>
-                        <a href="#about">About Us</a>
-                        <a href="#careers">Careers</a>
-                        <a href="#contact">Contact</a>
-                        <a href="#blog">Blog</a>
-                    </div>
-
-                    <div class="footer-column">
-                        <h4>Legal</h4>
-                        <a href="#privacy">Privacy Policy</a>
-                        <a href="#terms">Terms of Service</a>
-                        <a href="#risk">Risk Disclosure</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="footer-bottom">
-                <p>&copy; 2025 ProTrader. All rights reserved.</p>
-                <div class="footer-socials">
-                    <a href="#" class="social-link">Twitter</a>
-                    <a href="#" class="social-link">LinkedIn</a>
-                    <a href="#" class="social-link">Instagram</a>
-                </div>
-            </div>
+        <div class="floating-card card-1">
+          <div class="fc-label">Portfolio P&L</div>
+          <div class="fc-value positive">+&#8377;12,458</div>
         </div>
-    </footer>
+        <div class="floating-card card-2">
+          <div class="fc-label">AI Signal</div>
+          <div class="fc-value positive">BUY NIFTY CE</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <script src="js/landing.js"></script>
+  <!-- Features Section -->
+  <section class="features-section" id="features">
+    <div class="section-container">
+      <div class="section-header">
+        <div class="section-label">Why ProTrader</div>
+        <h2 class="section-title">Professional Trading Tools</h2>
+        <p class="section-subtitle">Everything you need to master options trading, from beginners to advanced traders</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon blue">&#x1F4CA;</div>
+          <h3>Options Chain</h3>
+          <p>Live options chain with real-time LTP, OI, IV, and Greeks for all NSE options. Click to trade directly from the chain.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon green">&#x1F9E0;</div>
+          <h3>AI Price Predictions</h3>
+          <p>Machine learning models analyze 15+ technical indicators to generate BUY/SELL/HOLD signals with confidence scores.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon purple">&#x1F4C8;</div>
+          <h3>Greeks Calculator</h3>
+          <p>Delta, Gamma, Theta, Vega, Rho — all calculated in real-time. Understand option sensitivity before you trade.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon orange">&#x1F525;</div>
+          <h3>Strategy Builder</h3>
+          <p>Build complex options strategies like Iron Condor, Straddle, Strangle with P&L visualization and risk analysis.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon cyan">&#x1F3AF;</div>
+          <h3>IV Analysis</h3>
+          <p>Track implied volatility across strikes and expiries. Identify high IV environments for premium selling opportunities.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon red">&#x1F680;</div>
+          <h3>Backtesting Engine</h3>
+          <p>Test your trading strategies against historical data. SMA crossover, RSI, MACD, Bollinger — see what works before risking real money.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Markets Section -->
+  <section class="markets-section" id="markets">
+    <div class="section-container">
+      <div class="section-header">
+        <div class="section-label">Markets</div>
+        <h2 class="section-title">Trade Everything</h2>
+        <p class="section-subtitle">From NIFTY options to crypto, forex to commodities — all in one platform</p>
+      </div>
+      <div class="markets-grid">
+        <div class="market-overview-card">
+          <div class="market-overview-header">
+            <span class="market-overview-name">&#x1F4C8; Stocks & Indices</span>
+            <span class="market-overview-icon" style="background:var(--blue-dim);color:var(--blue)">&#x1F4CA;</span>
+          </div>
+          <div class="market-overview-list">
+            <div class="market-overview-item"><span class="name">RELIANCE</span><span class="price">&#8377;2,450</span><span class="change positive">+1.5%</span></div>
+            <div class="market-overview-item"><span class="name">TCS</span><span class="price">&#8377;3,278</span><span class="change positive">+2.8%</span></div>
+            <div class="market-overview-item"><span class="name">NIFTY</span><span class="price">24,850</span><span class="change positive">+1.2%</span></div>
+          </div>
+        </div>
+        <div class="market-overview-card">
+          <div class="market-overview-header">
+            <span class="market-overview-name">&#x1F48E; Crypto</span>
+            <span class="market-overview-icon" style="background:var(--orange-dim);color:var(--orange)">&#x20BF;</span>
+          </div>
+          <div class="market-overview-list">
+            <div class="market-overview-item"><span class="name">BTC/INR</span><span class="price">35.2L</span><span class="change positive">+4.2%</span></div>
+            <div class="market-overview-item"><span class="name">ETH/INR</span><span class="price">2.0L</span><span class="change positive">+5.8%</span></div>
+            <div class="market-overview-item"><span class="name">SOL/INR</span><span class="price">&#8377;6,520</span><span class="change positive">+8.2%</span></div>
+          </div>
+        </div>
+        <div class="market-overview-card">
+          <div class="market-overview-header">
+            <span class="market-overview-name">&#x1F4B1; Forex</span>
+            <span class="market-overview-icon" style="background:var(--purple-dim);color:var(--purple)">&#x0024;</span>
+          </div>
+          <div class="market-overview-list">
+            <div class="market-overview-item"><span class="name">USD/INR</span><span class="price">83.50</span><span class="change positive">+0.15%</span></div>
+            <div class="market-overview-item"><span class="name">EUR/INR</span><span class="price">90.20</span><span class="change negative">-0.25%</span></div>
+            <div class="market-overview-item"><span class="name">GBP/INR</span><span class="price">105.80</span><span class="change positive">+0.50%</span></div>
+          </div>
+        </div>
+        <div class="market-overview-card">
+          <div class="market-overview-header">
+            <span class="market-overview-name">&#x1F4B0; Commodities</span>
+            <span class="market-overview-icon" style="background:rgba(6,182,212,0.15);color:var(--cyan)">&#x2696;</span>
+          </div>
+          <div class="market-overview-list">
+            <div class="market-overview-item"><span class="name">GOLD</span><span class="price">&#8377;72,450</span><span class="change negative">-0.45%</span></div>
+            <div class="market-overview-item"><span class="name">SILVER</span><span class="price">&#8377;88,200</span><span class="change positive">+1.2%</span></div>
+            <div class="market-overview-item"><span class="name">CRUDE</span><span class="price">&#8377;6,200</span><span class="change positive">+2.1%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trading Section -->
+  <section class="trading-section" id="trading">
+    <div class="section-container">
+      <div class="trading-features">
+        <div class="trading-visual">
+          <div class="trading-visual-card">
+            <div class="tv-header">
+              <span class="tv-symbol">NIFTY 50</span>
+              <span class="market-card-badge stock">Options</span>
+            </div>
+            <div class="tv-price">&#8377;24,850.75</div>
+            <div class="market-card-change positive" style="margin-bottom:16px">+1.25% (&#8377;306.50)</div>
+            <div class="tv-chart" id="tv-chart"></div>
+            <div class="tv-actions">
+              <button class="btn-buy">&#x25B2; Buy Call</button>
+              <button class="btn-sell">&#x25BC; Buy Put</button>
+            </div>
+          </div>
+        </div>
+        <div class="trading-content">
+          <h2>Options Trading<br><span class="gradient-text">Made Simple</span></h2>
+          <p>Whether you're buying your first call option or building complex multi-leg strategies, ProTrader gives you the tools to trade with confidence.</p>
+          <div class="trading-list">
+            <div class="trading-list-item">
+              <div class="icon">&#x2713;</div>
+              <div class="text">One-click options trading from the chain</div>
+            </div>
+            <div class="trading-list-item">
+              <div class="icon">&#x2713;</div>
+              <div class="text">Real-time Greeks for every strike price</div>
+            </div>
+            <div class="trading-list-item">
+              <div class="icon">&#x2713;</div>
+              <div class="text">Strategy P&L calculator before you execute</div>
+            </div>
+            <div class="trading-list-item">
+              <div class="icon">&#x2713;</div>
+              <div class="text">Max loss / max profit visualization</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="cta-container">
+      <h2 class="cta-title">Start Trading Today</h2>
+      <p class="cta-subtitle">Join thousands of traders who are mastering options with virtual capital. No risk, real learning.</p>
+      <div class="cta-buttons">
+        <a href="login.html?register=true" class="btn btn-primary btn-large">Create Free Account &#x2192;</a>
+        <a href="terminal.html" class="btn btn-ghost btn-large">Try Demo</a>
+      </div>
+      <div class="cta-trust">
+        <div class="cta-trust-item"><i>&#x2713;</i> Free forever</div>
+        <div class="cta-trust-item"><i>&#x2713;</i> No credit card</div>
+        <div class="cta-trust-item"><i>&#x2713;</i> &#8377;1,00,000 virtual capital</div>
+        <div class="cta-trust-item"><i>&#x2713;</i> Real market data</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        &#x1F4C8; <span>Pro</span>Trader
+      </div>
+      <div class="footer-links">
+        <a href="pricing.html">Pricing</a>
+        <a href="login.html">Login</a>
+        <a href="terminal.html">Markets</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 ProTrader. Educational platform.
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/landing.js"></script>
 </body>
-
 </html>

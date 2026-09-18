@@ -1,14 +1,4 @@
 @echo off
-echo ========================================
-echo Starting ProTrader Backend Server
-echo ========================================
-echo.
-echo Mode: In-Memory (No Database)
-echo Port: 3000
-echo.
-echo Starting server...
-echo.
-
-node server-no-db.js
-
-pause
+cd /d "C:\Users\Happy\OneDrive\Desktop\trading-platform.clg\.freebuff\worktrees\870dad5f-5512-4300-b091-3c2c3e653fd3"
+set PORT=3001
+start /B node server-v2.js
