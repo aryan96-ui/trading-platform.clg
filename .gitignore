@@ -26,3 +26,16 @@ build/
 # Temporary files
 *.tmp
 *.temp
+tmp.*
+*.tar.zst
+
+# Python
+venv/
+*/venv/
+__pycache__/
+*.pyc
+
+# Worktrees and tools
+.freebuff/
+.vercel/
+

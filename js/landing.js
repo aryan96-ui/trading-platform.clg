@@ -1,104 +1,109 @@
-// ProTrader Landing Page - Interactive Features
+// ProTrader Landing Page - Interactive Features & Animations
 
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 });
 
 // Navbar background on scroll
 window.addEventListener('scroll', () => {
-    const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 50) {
-        navbar.style.background = 'rgba(10, 14, 39, 0.98)';
-        navbar.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.2)';
-    } else {
-        navbar.style.background = 'rgba(10, 14, 39, 0.95)';
-        navbar.style.boxShadow = 'none';
-    }
+  const navbar = document.querySelector('.navbar');
+  if (navbar) {
+    navbar.style.background = window.scrollY > 50
+      ? 'rgba(10, 14, 23, 0.98)' : 'rgba(10, 14, 23, 0.8)';
+    navbar.style.boxShadow = window.scrollY > 50
+      ? '0 4px 24px rgba(0, 0, 0, 0.3)' : 'none';
+  }
 });
 
-// Animate stats on scroll
-const observerOptions = {
-    threshold: 0.3,
-    rootMargin: '0px 0px -100px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
-    });
-}, observerOptions);
-
-// Observe feature cards
-document.querySelectorAll('.feature-card, .market-card').forEach(card => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(30px)';
-    card.style.transition = 'all 0.6s ease-out';
-    observer.observe(card);
-});
-
-// Update live market prices (demo animation)
-function updateMarketPrices() {
-    const marketItems = document.querySelectorAll('.market-item');
-    marketItems.forEach(item => {
-        const priceEl = item.querySelector('.market-price');
-        const changeEl = item.querySelector('.market-change');
-
-        if (priceEl && changeEl) {
-            // Simulate small price change
-            const currentPrice = parseFloat(priceEl.textContent.replace(/[$,]/g, ''));
-            const change = (Math.random() - 0.5) * 2;
-            const newPrice = currentPrice + change;
-
-            // Update with animation
-            priceEl.style.transition = 'color 0.3s';
-            priceEl.textContent = `$${newPrice.toFixed(2)}`;
-
-            if (change > 0) {
-                priceEl.style.color = 'var(--accent-green)';
-            } else if (change < 0) {
-                priceEl.style.color = 'var(--accent-red)';
-            }
-
-            setTimeout(() => {
-                priceEl.style.color = 'var(--text-primary)';
-            }, 500);
-        }
-    });
+// Generate mini chart bars
+function generateMiniChart(containerId, bullish) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const barCount = 20;
+  let html = '';
+  for (let i = 0; i < barCount; i++) {
+    const height = 20 + Math.random() * 80;
+    const isUp = bullish ? Math.random() > 0.35 : Math.random() > 0.65;
+    html += '<div class="bar ' + (isUp ? 'up' : 'down') + '" style="height:' + height + '%"></div>';
+  }
+  container.innerHTML = html;
 }
 
-// Update prices every 3 seconds
-setInterval(updateMarketPrices, 3000);
+// Generate TV chart bars
+function generateTVChart() {
+  const container = document.getElementById('tv-chart');
+  if (!container) return;
+  const barCount = 40;
+  let html = '';
+  let base = 50;
+  for (let i = 0; i < barCount; i++) {
+    base += (Math.random() - 0.45) * 8;
+    base = Math.max(15, Math.min(95, base));
+    const isUp = i > 0 && base > (base + (Math.random() - 0.5) * 5);
+    const color = isUp ? 'var(--green)' : 'var(--red)';
+    html += '<div class="bar" style="height:' + base + '%;background:' + color + ';opacity:0.7"></div>';
+  }
+  container.innerHTML = html;
+}
 
-// Parallax effect for hero glow
-window.addEventListener('mousemove', (e) => {
-    const glow = document.querySelector('.hero-glow');
-    if (glow) {
-        const x = e.clientX / window.innerWidth;
-        const y = e.clientY / window.innerHeight;
-        glow.style.transform = `translate(${x * 50}px, ${y * 50}px)`;
+// Initialize charts
+generateMiniChart('chart-nifty', true);
+generateMiniChart('chart-banknifty', true);
+generateMiniChart('chart-btc', true);
+generateMiniChart('chart-gold', false);
+generateTVChart();
+
+// Animate stats on scroll (count up effect)
+const observerOptions = { threshold: 0.3 };
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
     }
+  });
+}, observerOptions);
+
+document.querySelectorAll('.feature-card, .market-overview-card, .trading-features').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(30px)';
+  el.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+  observer.observe(el);
 });
 
-// Check URL for registration parameter
-window.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('register') === '1') {
-        // If coming back from registration, show success message (optional)
-        console.log('Ready to register');
+// Live price simulation on hero market cards
+function simulatePrices() {
+  document.querySelectorAll('.market-card-price').forEach(el => {
+    const text = el.textContent;
+    const num = parseFloat(text.replace(/[\u20B9,]/g, ''));
+    if (!isNaN(num) && num > 100) {
+      const change = num * (Math.random() - 0.5) * 0.002;
+      const newNum = num + change;
+      const changeEl = el.parentElement.querySelector('.market-card-change');
+      if (changeEl) {
+        const isUp = change >= 0;
+        changeEl.className = 'market-card-change ' + (isUp ? 'positive' : 'negative');
+        changeEl.textContent = (isUp ? '+' : '') + ((change / num) * 100).toFixed(2) + '%';
+      }
     }
+  });
+}
+
+setInterval(simulatePrices, 3000);
+
+// Parallax effect for hero
+window.addEventListener('mousemove', (e) => {
+  const x = e.clientX / window.innerWidth;
+  const y = e.clientY / window.innerHeight;
+  const grid = document.querySelector('.hero-grid');
+  if (grid) {
+    grid.style.transform = 'translate(' + (x * 10) + 'px, ' + (y * 10) + 'px)';
+  }
 });
 
 console.log('ProTrader Landing Page Loaded');

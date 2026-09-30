@@ -1,0 +1,63 @@
+/* ==========================================================================
+   ProTrader — design tokens
+
+   The single source of the palette, type, radii, shadows and motion shared by
+   every surface. Loaded FIRST, before each surface's own stylesheet.
+
+   Why this exists: the landing funnel and the trading terminal each used to
+   declare their own palette with slightly different values (#00c853 green here,
+   #10b981 there; #3b82f6 blue here, #6366f1 there), so the product looked like
+   two products. Surface stylesheets now consume these names instead of
+   redeclaring them.
+
+   Layout dimensions specific to the terminal chrome (--sidebar-w, --dock-h and
+   friends) stay in platform.css — they are structure, not identity.
+   ========================================================================== */
+
+:root {
+    /* surfaces */
+    --bg-base: #06080f;
+    --bg-surface: #0c1220;
+    --bg-elevated: #131b2e;
+    --bg-hover: #1a2540;
+
+    /* type */
+    --text-primary: #e4e9f0;
+    --text-secondary: #7d8a9e;
+    --text-muted: #4a5568;
+    --font-sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* semantics */
+    --green: #10b981;
+    --green-dim: rgba(16, 185, 129, .15);
+    --red: #ef4444;
+    --blue: #6366f1;
+    --blue-dim: rgba(99, 102, 241, .15);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167, 139, 250, .15);
+    --orange: #f59e0b;
+    --orange-dim: rgba(245, 158, 11, .15);
+    --cyan: #22d3ee;
+
+    /* lines */
+    --border: #1a2332;
+    --border-accent: #253350;
+
+    /* radii */
+    --radius-sm: 6px;
+    --radius: 8px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    /* elevation */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, .4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, .5);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, .6);
+    --glow-blue: 0 0 20px rgba(99, 102, 241, .15);
+
+    /* motion */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+}

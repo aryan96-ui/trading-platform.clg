@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Test Page</title>
+    <link rel="stylesheet" href="css/chatbot-widget.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .test-container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .status-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .success {
+            color: #4ade80;
+        }
+
+        .error {
+            color: #f87171;
+        }
+
+        .warning {
+            color: #fbbf24;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>🤖 Chatbot Test Page</h1>
+        <p>This page will help you debug the chatbot widget.</p>
+
+        <div class="status">
+            <h2>Status Checks</h2>
+            <div class="status-item" id="css-status">Checking CSS...</div>
+            <div class="status-item" id="js-status">Checking JavaScript...</div>
+            <div class="status-item" id="widget-status">Checking Widget...</div>
+            <div class="status-item" id="button-status">Checking Button...</div>
+        </div>
+
+        <div>
+            <button onclick="testChatbot()">Test Chatbot</button>
+            <button onclick="checkBackend()">Check Backend</button>
+            <button onclick="clearStorage()">Clear Storage</button>
+        </div>
+
+        <div id="console-output"
+            style="margin-top: 20px; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+            <div>Console Output:</div>
+        </div>
+    </div>
+
+    <script src="js/chatbot-widget.js"></script>
+    <script>
+        // Log function
+        function log(message, type = 'info') {
+            const output = document.getElementById('console-output');
+            const color = type === 'error' ? '#f87171' : type === 'success' ? '#4ade80' : '#9ca3af';
+            output.innerHTML += `<div style="color: ${color}; margin: 5px 0;">${new Date().toLocaleTimeString()}: ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Check CSS loaded
+        setTimeout(() => {
+            const cssStatus = document.getElementById('css-status');
+            const chatbotToggle = document.querySelector('.chatbot-toggle');
+            if (chatbotToggle) {
+                const styles = window.getComputedStyle(chatbotToggle);
+                if (styles.position === 'fixed') {
+                    cssStatus.innerHTML = '✅ CSS Loaded Successfully';
+                    cssStatus.className = 'status-item success';
+                    log('CSS loaded successfully', 'success');
+                } else {
+                    cssStatus.innerHTML = '⚠️ CSS Loaded but styles may be wrong';
+                    cssStatus.className = 'status-item warning';
+                    log('CSS loaded but styles may be incorrect', 'error');
+                }
+            } else {
+                cssStatus.innerHTML = '❌ CSS Not Found';
+                cssStatus.className = 'status-item error';
+                log('CSS file not found or not loaded', 'error');
+            }
+        }, 500);
+
+        // Check JS loaded
+        setTimeout(() => {
+            const jsStatus = document.getElementById('js-status');
+            if (typeof ChatbotWidget !== 'undefined') {
+                jsStatus.innerHTML = '✅ JavaScript Loaded Successfully';
+                jsStatus.className = 'status-item success';
+                log('JavaScript loaded successfully', 'success');
+            } else {
+                jsStatus.innerHTML = '❌ JavaScript Not Loaded';
+                jsStatus.className = 'status-item error';
+                log('JavaScript file not found or not loaded', 'error');
+            }
+        }, 500);
+
+        // Check widget initialized
+        setTimeout(() => {
+            const widgetStatus = document.getElementById('widget-status');
+            if (window.chatbot) {
+                widgetStatus.innerHTML = '✅ Widget Initialized';
+                widgetStatus.className = 'status-item success';
+                log('Chatbot widget initialized', 'success');
+            } else {
+                widgetStatus.innerHTML = '❌ Widget Not Initialized';
+                widgetStatus.className = 'status-item error';
+                log('Chatbot widget failed to initialize', 'error');
+            }
+        }, 1000);
+
+        // Check button visible
+        setTimeout(() => {
+            const buttonStatus = document.getElementById('button-status');
+            const chatbotToggle = document.getElementById('chatbotToggle');
+            if (chatbotToggle) {
+                const rect = chatbotToggle.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {
+                    buttonStatus.innerHTML = `✅ Chat Button Visible (${Math.round(rect.bottom)}px from top, ${Math.round(rect.right)}px from left)`;
+                    buttonStatus.className = 'status-item success';
+                    log('Chat button is visible on screen', 'success');
+                } else {
+                    buttonStatus.innerHTML = '⚠️ Chat Button Exists but Not Visible';
+                    buttonStatus.className = 'status-item warning';
+                    log('Chat button exists but may be hidden', 'error');
+                }
+            } else {
+                buttonStatus.innerHTML = '❌ Chat Button Not Found';
+                buttonStatus.className = 'status-item error';
+                log('Chat button element not found in DOM', 'error');
+            }
+        }, 1000);
+
+        // Test chatbot
+        function testChatbot() {
+            log('Testing chatbot...', 'info');
+            const chatbotToggle = document.getElementById('chatbotToggle');
+            if (chatbotToggle) {
+                chatbotToggle.click();
+                log('Clicked chat button', 'success');
+                setTimeout(() => {
+                    const chatbotWindow = document.getElementById('chatbotWindow');
+                    if (chatbotWindow && chatbotWindow.classList.contains('active')) {
+                        log('Chat window opened successfully!', 'success');
+                        alert('✅ Chatbot is working! The chat window should be open.');
+                    } else {
+                        log('Chat window did not open', 'error');
+                        alert('❌ Chat window did not open. Check console for errors.');
+                    }
+                }, 500);
+            } else {
+                log('Chat button not found', 'error');
+                alert('❌ Chat button not found!');
+            }
+        }
+
+        // Check backend
+        async function checkBackend() {
+            log('Checking backend connection...', 'info');
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`Backend is running! Model: ${data.model}`, 'success');
+                    alert(`✅ Backend is running!\nModel: ${data.model}\nStatus: ${data.status}`);
+                } else {
+                    log(`Backend returned error: ${response.status}`, 'error');
+                    alert(`⚠️ Backend responded but with error: ${response.status}`);
+                }
+            } catch (error) {
+                log(`Backend connection failed: ${error.message}`, 'error');
+                alert('❌ Cannot connect to backend!\n\nMake sure to:\n1. Start Ollama: ollama serve\n2. Start backend: cd chatbot-backend && start-nodejs.bat');
+            }
+        }
+
+        // Clear storage
+        function clearStorage() {
+            localStorage.removeItem('chatbot_session_id');
+            localStorage.removeItem('chatbot_history');
+            log('Cleared localStorage', 'success');
+            alert('✅ Cleared chatbot storage. Refresh the page to start fresh.');
+        }
+
+        // Log initial state
+        log('Test page loaded', 'info');
+        log('Waiting for chatbot to initialize...', 'info');
+    </script>
+</body>
+
+</html>

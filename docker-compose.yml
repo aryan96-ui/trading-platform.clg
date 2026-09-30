@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  protrader-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: protrader_platform
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongo:27017/trading
+      - JWT_SECRET=protrader_production_jwt_secret_key_2026_!@#$
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7.0
+    container_name: protrader_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

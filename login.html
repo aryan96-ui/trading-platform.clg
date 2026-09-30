@@ -4,368 +4,719 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - ProTrader</title>
-    <link rel="stylesheet" href="css/landing.css">
+    <title>ProTrader — Institutional Trading Access</title>
+    <meta name="description" content="Access the ProTrader algorithmic paper trading terminal with institutional-grade risk controls and AI analytics.">
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        .auth-page {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: #050811;
+            color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .auth-layout {
             display: flex;
-            background: var(--bg-dark);
+            min-height: 100vh;
             position: relative;
-            overflow: hidden;
         }
 
-        .auth-glow {
+        /* Ambient Glows */
+        .ambient-glow-1 {
             position: absolute;
-            top: -300px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 1000px;
-            height: 1000px;
-            background: radial-gradient(circle, var(--glow-blue) 0%, transparent 70%);
+            top: -200px;
+            left: -150px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
             pointer-events: none;
+            z-index: 1;
         }
 
-        .auth-left {
+        .ambient-glow-2 {
+            position: absolute;
+            bottom: -200px;
+            right: 40%;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Left Side: Form Container */
+        .auth-panel-left {
             flex: 1;
+            max-width: 620px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 48px 56px;
+            position: relative;
+            z-index: 2;
+            background: #070b16;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .auth-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6366f1, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+        }
+
+        .brand-logo span {
+            color: #818cf8;
+            font-weight: 800;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .back-link:hover {
+            color: var(--text-primary);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+        }
+
+        .auth-heading {
+            margin-bottom: 28px;
+        }
+
+        .auth-title {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            margin-bottom: 8px;
+            line-height: 1.15;
+        }
+
+        .auth-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Message Containers */
+        .status-alert {
+            display: none;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        .status-alert.error {
+            display: flex;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .status-alert.success {
+            display: flex;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+
+        .status-alert.info {
+            display: flex;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Inputs */
+        .field-group {
+            margin-bottom: 20px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            width: 18px;
+            height: 18px;
+            color: #64748b;
+            pointer-events: none;
+            transition: color var(--transition-fast);
+        }
+
+        .auth-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 44px 0 42px;
+            background: #0d1424;
+            border: 1px solid #1e293b;
+            border-radius: var(--radius);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .auth-input::placeholder {
+            color: #475569;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #111a30;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .input-wrapper:focus-within .input-icon {
+            color: #818cf8;
+        }
+
+        /* Password Visibility Toggle */
+        .toggle-visibility-btn {
+            position: absolute;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .toggle-visibility-btn:hover {
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Auxiliary Actions */
+        .form-actions-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+
+        .remember-checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .remember-checkbox input {
+            accent-color: #6366f1;
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #818cf8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+        }
+
+        .forgot-link:hover {
+            color: #a5b4fc;
+            text-decoration: underline;
+        }
+
+        /* Primary Action Button */
+        .btn-submit-auth {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-submit-auth:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+        }
+
+        .btn-submit-auth:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit-auth:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Switch Link */
+        .auth-toggle-text {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .auth-toggle-link {
+            color: #818cf8;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .auth-toggle-link:hover {
+            color: #a5b4fc;
+            text-decoration: underline;
+        }
+
+        /* Security Badges at Bottom */
+        .security-footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .security-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .security-pill svg {
+            color: #10b981;
+        }
+
+        /* Right Panel: Hero Showcase */
+        .auth-panel-right {
+            flex: 1.2;
+            background: radial-gradient(circle at 60% 30%, #0d172e 0%, #050811 80%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 60px;
             position: relative;
+            overflow: hidden;
+        }
+
+        .showcase-content {
+            max-width: 540px;
+            position: relative;
             z-index: 2;
         }
 
-        .auth-logo {
-            position: absolute;
-            top: 40px;
-            left: 60px;
+        .market-pills {
             display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .market-chip {
+            padding: 8px 14px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        .auth-container {
-            width: 100%;
-            max-width: 460px;
-        }
-
-        .auth-header {
-            margin-bottom: 40px;
-        }
-
-        .auth-title {
-            font-size: 42px;
-            font-weight: 800;
-            margin-bottom: 12px;
-            letter-spacing: -0.02em;
-        }
-
-        .auth-subtitle {
-            font-size: 18px;
-            color: var(--text-secondary);
-        }
-
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 14px 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 16px;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-            background: var(--bg-elevated);
-        }
-
-        .form-submit {
-            width: 100%;
-            padding: 16px;
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .form-submit:hover {
-            background: #1e4edd;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(41, 98, 255, 0.4);
-        }
-
-        .form-switch {
-            text-align: center;
-            margin-top: 24px;
-            color: var(--text-secondary);
-            font-size: 15px;
-        }
-
-        .form-switch a {
-            color: var(--accent-blue);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .form-switch a:hover {
-            text-decoration: underline;
-        }
-
-        .demo-credentials {
-            margin-top: 32px;
-            padding: 20px;
-            background: rgba(41, 98, 255, 0.1);
-            border: 1px solid rgba(41, 98, 255, 0.3);
-            border-radius: 12px;
-        }
-
-        .demo-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--accent-blue);
-            margin-bottom: 12px;
-        }
-
-        .demo-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        .demo-value {
-            color: var(--text-primary);
-            font-weight: 600;
-        }
-
-        .auth-right {
-            flex: 1;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 60px;
-            position: relative;
-        }
-
-        .auth-visual {
-            max-width: 600px;
-            text-align: center;
-        }
-
-        .auth-visual-title {
-            font-size: 48px;
-            font-weight: 900;
-            color: white;
-            margin-bottom: 24px;
-            line-height: 1.2;
-        }
-
-        .auth-visual-desc {
-            font-size: 20px;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 40px;
-        }
-
-        .auth-features {
-            display: grid;
-            gap: 20px;
-            text-align: left;
-        }
-
-        .auth-feature {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            gap: 8px;
             backdrop-filter: blur(10px);
         }
 
-        .auth-feature-icon {
-            width: 48px;
-            height: 48px;
-            background: white;
+        .chip-name {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .chip-price {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .chip-change.up {
+            color: #10b981;
+        }
+
+        .chip-change.down {
+            color: #ef4444;
+        }
+
+        .showcase-header {
+            font-size: 40px;
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        .showcase-header span {
+            background: linear-gradient(135deg, #818cf8 0%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .showcase-desc {
+            font-size: 16px;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 36px;
+        }
+
+        .feature-cards {
+            display: grid;
+            gap: 16px;
+        }
+
+        .feature-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 18px 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            backdrop-filter: blur(12px);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .feature-box:hover {
+            transform: translateX(4px);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .feature-icon-wrap {
+            width: 40px;
+            height: 40px;
             border-radius: 10px;
+            background: rgba(99, 102, 241, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            color: #818cf8;
+            flex-shrink: 0;
         }
 
-        .auth-feature-text {
-            flex: 1;
-        }
-
-        .auth-feature-title {
-            font-size: 16px;
+        .feature-body h4 {
+            font-size: 15px;
             font-weight: 700;
-            color: white;
+            color: #ffffff;
             margin-bottom: 4px;
         }
 
-        .auth-feature-desc {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.8);
+        .feature-body p {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.4;
         }
 
-        .message {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .message.success {
-            background: rgba(38, 166, 154, 0.2);
-            color: var(--accent-green);
-            border: 1px solid rgba(38, 166, 154, 0.3);
-        }
-
-        .message.error {
-            background: rgba(239, 83, 80, 0.2);
-            color: var(--accent-red);
-            border: 1px solid rgba(239, 83, 80, 0.3);
-        }
-
-        @media (max-width: 1024px) {
-            .auth-right {
+        @media (max-width: 1080px) {
+            .auth-panel-right {
                 display: none;
             }
-        }
-
-        @media (max-width: 768px) {
-            .auth-left {
+            .auth-panel-left {
+                max-width: 100%;
+                border-right: none;
                 padding: 40px 24px;
-            }
-
-            .auth-logo {
-                left: 24px;
-            }
-
-            .auth-title {
-                font-size: 32px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="auth-page">
-        <div class="auth-glow"></div>
+    <div class="auth-layout">
+        <div class="ambient-glow-1"></div>
+        <div class="ambient-glow-2"></div>
 
-        <div class="auth-left">
-            <a href="index.html" class="auth-logo">
-                <div class="logo-icon">📈</div>
-                <span class="logo-text">Pro<strong>Trader</strong></span>
-            </a>
+        <!-- Left Side: Authentication Form -->
+        <main class="auth-panel-left">
+            <header class="auth-topbar">
+                <a href="index.html" class="brand-logo" title="Back to ProTrader Homepage">
+                    <div class="brand-badge">⚡</div>
+                    PRO<span>TRADER</span>
+                </a>
+                <a href="index.html" class="back-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Home
+                </a>
+            </header>
 
-            <div class="auth-container">
-                <div class="auth-header">
+            <div class="auth-card">
+                <div class="auth-heading">
                     <h1 class="auth-title" id="form-title">Welcome back</h1>
-                    <p class="auth-subtitle" id="form-subtitle">Sign in to continue trading</p>
+                    <p class="auth-subtitle" id="form-subtitle">Sign in to your ProTrader algorithmic account</p>
                 </div>
 
-                <div id="message-container"></div>
+                <!-- Status / Alert Message Container -->
+                <div id="status-alert" class="status-alert">
+                    <span id="alert-icon">ℹ️</span>
+                    <span id="alert-text"></span>
+                </div>
 
-                <form id="auth-form">
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
+                <form id="auth-form" novalidate>
+                    <!-- Name field (shown on Register mode) -->
+                    <div class="field-group" id="name-group" style="display: none;">
+                        <label class="field-label" for="name">Full Name</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <input type="text" id="name" class="auth-input" placeholder="e.g. Alex Morgan" autocomplete="name">
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" id="password" class="form-input" placeholder="Enter your password"
-                            required>
+                    <!-- Email Field -->
+                    <div class="field-group">
+                        <label class="field-label" for="email">Email Address</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <input type="email" id="email" class="auth-input" placeholder="name@company.com" autocomplete="email" required>
+                        </div>
                     </div>
 
-                    <button type="submit" class="form-submit" id="submit-btn">Sign In</button>
+                    <!-- Password Field -->
+                    <div class="field-group">
+                        <label class="field-label" for="password">Password</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <input type="password" id="password" class="auth-input" placeholder="••••••••••••" autocomplete="current-password" required>
+                            <button type="button" class="toggle-visibility-btn" id="toggle-password-btn" aria-label="Toggle password visibility" title="Show/Hide Password">
+                                <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-actions-row">
+                        <label class="remember-checkbox">
+                            <input type="checkbox" id="remember-me">
+                            <span>Remember device</span>
+                        </label>
+                        <a href="#" class="forgot-link" id="forgot-password-link">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-submit-auth" id="submit-btn">
+                        <span id="btn-text">Sign In</span>
+                        <svg id="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
                 </form>
 
-                <p class="form-switch" id="switch-text">
-                    Don't have an account? <a href="#" id="switch-link">Create one</a>
+                <p class="auth-toggle-text" id="switch-text">
+                    Don't have an account? <a href="login.html?register=true" class="auth-toggle-link" id="switch-link">Create one</a>
+                </p>
+            </div>
+
+            <footer class="security-footer">
+                <div class="security-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>256-Bit SSL Encryption</span>
+                </div>
+                <div class="security-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>Institutional Security</span>
+                </div>
+            </footer>
+        </main>
+
+        <!-- Right Side: Platform Showcase & Market Intelligence -->
+        <aside class="auth-panel-right">
+            <div class="showcase-content">
+                <div class="market-pills">
+                    <div class="market-chip">
+                        <span class="chip-name">NIFTY 50</span>
+                        <span class="chip-price">24,842.10</span>
+                        <span class="chip-change up">+0.78%</span>
+                    </div>
+                    <div class="market-chip">
+                        <span class="chip-name">RELIANCE</span>
+                        <span class="chip-price">₹2,945.50</span>
+                        <span class="chip-change up">+2.41%</span>
+                    </div>
+                    <div class="market-chip">
+                        <span class="chip-name">BTC/USD</span>
+                        <span class="chip-price">$65,420</span>
+                        <span class="chip-change up">+3.15%</span>
+                    </div>
+                </div>
+
+                <h2 class="showcase-header">
+                    Institutional-Grade <span>Quantitative Terminal</span>
+                </h2>
+                <p class="showcase-desc">
+                    Execute simulated algorithmic trades with sub-millisecond precision, real-time Greeks calculation, and automated risk guardrails.
                 </p>
 
-                <div class="demo-credentials">
-                    <div class="demo-title">Demo Credentials</div>
-                    <div class="demo-item">
-                        <span>Email:</span>
-                        <span class="demo-value">demo@college.com</span>
-                    </div>
-                    <div class="demo-item">
-                        <span>Password:</span>
-                        <span class="demo-value">password123</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="auth-right">
-            <div class="auth-visual">
-                <h2 class="auth-visual-title">Trade with Confidence</h2>
-                <p class="auth-visual-desc">Join thousands of traders using ProTrader's advanced platform</p>
-
-                <div class="auth-features">
-                    <div class="auth-feature">
-                        <div class="auth-feature-icon">⚡</div>
-                        <div class="auth-feature-text">
-                            <div class="auth-feature-title">Real-Time Data</div>
-                            <div class="auth-feature-desc">Live market updates every second</div>
+                <div class="feature-cards">
+                    <div class="feature-box">
+                        <div class="feature-icon-wrap">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                        </div>
+                        <div class="feature-body">
+                            <h4>Real-Time Market Execution</h4>
+                            <p>Simulated multi-asset order routing across stocks, indices, crypto, and derivatives.</p>
                         </div>
                     </div>
 
-                    <div class="auth-feature">
-                        <div class="auth-feature-icon">🔒</div>
-                        <div class="auth-feature-text">
-                            <div class="auth-feature-title">Secure Trading</div>
-                            <div class="auth-feature-desc">Bank-level encryption & security</div>
+                    <div class="feature-box">
+                        <div class="feature-icon-wrap">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                        </div>
+                        <div class="feature-body">
+                            <h4>₹100,000 Starting Virtual Capital</h4>
+                            <p>Refine your trading edge and backtest models in live simulated market regimes with zero financial risk.</p>
                         </div>
                     </div>
 
-                    <div class="auth-feature">
-                        <div class="auth-feature-icon">📊</div>
-                        <div class="auth-feature-text">
-                            <div class="auth-feature-title">Advanced Analytics</div>
-                            <div class="auth-feature-desc">Professional charting & indicators</div>
+                    <div class="feature-box">
+                        <div class="feature-icon-wrap">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                        </div>
+                        <div class="feature-body">
+                            <h4>AI Quant & Behavioral Guardrails</h4>
+                            <p>27 quantitative engines detecting revenge trading, regime shifts, and position sizing anomalies.</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </aside>
     </div>
 
+    <script src="js/core/session.js"></script>
     <script src="js/auth.js"></script>
 </body>
 

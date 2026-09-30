@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProTrader - Minimal Chatbot Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        p {
+            font-size: 18px;
+            color: #9ca3af;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .feature h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .feature p {
+            font-size: 14px;
+            color: #9ca3af;
+            margin: 0;
+        }
+
+        .cta {
+            margin-top: 40px;
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .cta h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .cta p {
+            margin: 0;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .arrow {
+            display: inline-block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            50% {
+                transform: translateX(10px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🤖 ProTrader AI Assistant</h1>
+        <p>
+            Your intelligent trading companion is ready to help!<br>
+            Click the chat button in the bottom-right corner to get started.
+        </p>
+
+        <div class="feature-grid">
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>Market Analysis</h3>
+                <p>Get insights on market trends and patterns</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">📈</div>
+                <h3>Technical Indicators</h3>
+                <p>Learn about RSI, MACD, and more</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">💡</div>
+                <h3>Trading Strategies</h3>
+                <p>Understand different trading approaches</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">🎓</div>
+                <h3>Educational</h3>
+                <p>Learn trading concepts and terminology</p>
+            </div>
+        </div>
+
+        <div class="cta">
+            <h2>Try asking me something! <span class="arrow">→</span></h2>
+            <p>
+                "What is a bull market?"<br>
+                "Explain RSI indicator"<br>
+                "How do I manage risk?"
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================
+         CHATBOT WIDGET - Just include this file!
+         ============================================ -->
+    <script>
+        // Load the minimal chatbot widget
+        fetch('chatbot-widget-minimal.html')
+            .then(response => response.text())
+            .then(html => {
+                // Extract and inject the widget HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Inject styles
+                const styles = doc.querySelectorAll('style');
+                styles.forEach(style => document.head.appendChild(style.cloneNode(true)));
+
+                // Inject links
+                const links = doc.querySelectorAll('link');
+                links.forEach(link => document.head.appendChild(link.cloneNode(true)));
+
+                // Inject HTML elements
+                const button = doc.getElementById('chat-btn');
+                const pane = doc.getElementById('chat-pane');
+                if (button) document.body.appendChild(button.cloneNode(true));
+                if (pane) document.body.appendChild(pane.cloneNode(true));
+
+                // Inject scripts
+                const scripts = doc.querySelectorAll('script');
+                scripts.forEach(script => {
+                    const newScript = document.createElement('script');
+                    newScript.textContent = script.textContent;
+                    document.body.appendChild(newScript);
+                });
+            })
+            .catch(err => console.error('Failed to load chatbot widget:', err));
+    </script>
+</body>
+
+</html>
