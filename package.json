@@ -1,7 +1,7 @@
 {
-    "name": "academic-trading-platform",
-    "version": "1.0.0",
-    "description": "College project - Paper trading platform",
+    "name": "protrader",
+    "version": "2.0.0",
+    "description": "ProTrader 2.0 - Institutional-Grade Paper Trading & Quantitative Intelligence Platform",
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
