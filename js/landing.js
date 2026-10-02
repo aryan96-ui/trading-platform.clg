@@ -106,4 +106,26 @@ window.addEventListener('mousemove', (e) => {
   }
 });
 
+// Mobile menu (≤768px): the hamburger reveals links + CTAs
+const navBurger = document.getElementById('navBurger');
+const mobileMenu = document.getElementById('mobileMenu');
+
+function closeMobileMenu() {
+  mobileMenu?.classList.remove('open');
+  navBurger?.setAttribute('aria-expanded', 'false');
+}
+
+navBurger?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const open = mobileMenu.classList.toggle('open');
+  navBurger.setAttribute('aria-expanded', String(open));
+});
+
+mobileMenu?.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMobileMenu));
+document.addEventListener('click', (e) => {
+  if (mobileMenu?.classList.contains('open') &&
+      !mobileMenu.contains(e.target) && !navBurger?.contains(e.target)) closeMobileMenu();
+});
+window.addEventListener('resize', () => { if (window.innerWidth > 768) closeMobileMenu(); });
+
 console.log('ProTrader Landing Page Loaded');

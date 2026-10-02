@@ -50,6 +50,9 @@ function switchView(view) {
         b.classList.toggle('active', b.dataset.view === view)
     );
 
+    // Phone: the sidebar is an overlay drawer — close it after navigating.
+    if (window.matchMedia('(max-width: 900px)').matches) $('sidebar')?.classList.add('collapsed');
+
     const center = $('centerPanel');
     if (center) center.scrollTop = 0;
 

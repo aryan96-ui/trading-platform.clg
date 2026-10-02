@@ -31,6 +31,8 @@ document.addEventListener('keydown', (e) => {
 async function boot() {
     renderNav();
     renderSidebar();
+    // Narrow screens boot with the rail collapsed; ☰ in the navbar opens it.
+    if (window.matchMedia('(max-width: 1200px)').matches) $('sidebar')?.classList.add('collapsed');
     renderProfileChip();
     renderDock();
     renderStatusBar();
@@ -52,5 +54,18 @@ async function boot() {
     setInterval(refreshStatus, 30000);
     setInterval(renderStatusBar, 1000);
 }
+
+// Keep the rail sensible across the 1200px boundary: collapse when a wide
+// window narrows (rotate / resize), expand when it widens again. Firing only
+// on the crossing avoids re-collapsing a drawer the user just opened while
+// mobile URL bars shrink the viewport.
+let _wasNarrow = window.innerWidth <= 1200;
+window.addEventListener('resize', () => {
+    const narrow = window.innerWidth <= 1200;
+    if (narrow !== _wasNarrow) {
+        document.querySelector('.sidebar')?.classList.toggle('collapsed', narrow);
+        _wasNarrow = narrow;
+    }
+});
 
 boot();

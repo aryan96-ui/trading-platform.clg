@@ -141,3 +141,42 @@ a{color:inherit;text-decoration:none}
 .footer-copy{font-size:13px;color:var(--text-muted)}
 @media(max-width:1024px){.hero-container{grid-template-columns:1fr;gap:40px}.hero-visual{order:-1}.hero-title{font-size:48px}.features-grid,.markets-grid{grid-template-columns:1fr 1fr}.trading-features{grid-template-columns:1fr;gap:40px}.trading-features.reverse{direction:ltr}}
 @media(max-width:768px){.hero-title{font-size:36px}.hero-stats{flex-direction:column;gap:24px}.features-grid,.markets-grid{grid-template-columns:1fr}.section-title,.cta-title{font-size:32px}.nav-links{display:none}.trading-visual-card{margin:0 -16px;border-radius:0}}
+
+/* ===== Mobile menu (hamburger) ===== */
+.nav-burger{display:none;flex-direction:column;justify-content:center;gap:5px;width:46px;height:42px;padding:0 11px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer}
+.nav-burger span{display:block;height:2px;width:100%;background:var(--text-primary);border-radius:2px;transition:var(--transition-fast)}
+.mobile-menu{display:none;position:absolute;top:64px;left:0;right:0;background:rgba(10,14,23,.98);border-bottom:1px solid var(--border);padding:10px 20px 18px;flex-direction:column;gap:2px;z-index:999;box-shadow:0 16px 32px rgba(0,0,0,.45)}
+.mobile-menu a{padding:13px 10px;font-size:15px;font-weight:600;color:var(--text-secondary);border-radius:var(--radius-sm)}
+.mobile-menu a:hover{color:var(--text-primary);background:var(--bg-hover)}
+.mobile-menu.open{display:flex}
+.mobile-menu-cta{display:flex;gap:10px;margin-top:10px;padding-top:12px;border-top:1px solid var(--border)}
+.mobile-menu-cta .btn{flex:1;justify-content:center}
+
+/* ===== Phone layout (≤768px) ===== */
+@media(max-width:768px){
+    .nav-burger{display:flex}
+    .nav-actions{display:none}          /* CTAs live in the burger menu on phones */
+    .nav-container{padding:0 16px}
+
+    /* Hero: zero-min column + wrapping CTA rows stop content from forcing
+       the grid wider than the screen (was clipping ~32px off the right). */
+    .hero-container{grid-template-columns:minmax(0,1fr);padding:0 20px;gap:32px}
+    .hero-cta{flex-wrap:wrap}
+    .hero-cta .btn{flex:1 1 45%;justify-content:center;min-width:0}
+
+    .cta-buttons{flex-wrap:wrap;justify-content:center}
+    .cta-buttons .btn{flex:1 1 auto;justify-content:center;min-width:0;max-width:320px}
+    .cta-trust{flex-wrap:wrap;gap:14px 24px;justify-content:center}
+
+    .footer-container{flex-wrap:wrap;gap:16px;justify-content:center;text-align:center}
+    .footer-links{flex-wrap:wrap;gap:16px;justify-content:center}
+
+    .features-section,.markets-section,.trading-section,.cta-section{padding:72px 0}
+    .section-container{padding:0 20px}
+    .trading-content h2{font-size:28px}
+
+    /* Decorative pieces: clipped by the viewport edge on phones, and the
+       blur filters cost real frames on low-end GPUs. */
+    .floating-card{display:none}
+    .trading-card{backdrop-filter:none}
+}

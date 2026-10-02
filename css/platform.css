@@ -21,12 +21,23 @@ body { overflow: hidden; }
    never cover the dock. */
 .platform {
     display: grid;
+    /* Explicit zero-min column: without this the implicit `auto` column is
+       floored at the content's min-content width, which let the dashboard
+       grid blow the whole shell out to ~2300px on phones. */
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 52px minmax(0, 1fr) 5px auto 30px 26px;
     height: 100vh;
+    height: 100dvh; /* follows the real viewport when mobile URL bars hide */
     overflow: hidden;
 }
 .platform > .ticker { position: relative; bottom: auto; left: auto; right: auto; height: 30px; }
-.platform > .status-bar { position: relative; bottom: auto; left: auto; right: auto; height: 26px; border-top: 1px solid var(--border); background: var(--bg-surface); }
+.platform > .status-bar {
+    position: relative; bottom: auto; left: auto; right: auto;
+    height: 26px; border-top: 1px solid var(--border); background: var(--bg-surface);
+    overflow-x: auto; overflow-y: hidden; white-space: nowrap;
+    scrollbar-width: none; -ms-overflow-style: none;
+}
+.platform > .status-bar::-webkit-scrollbar { display: none; }
 
 /* ---------- navbar ---------- */
 .topbar { height: 52px; flex-wrap: nowrap; }
@@ -73,7 +84,7 @@ body { overflow: hidden; }
 .signout-btn:hover { border-color: var(--red); color: var(--red); }
 
 /* ---------- body: sidebar | workspace ---------- */
-.body-row { display: flex; min-height: 0; overflow: hidden; }
+.body-row { display: flex; min-height: 0; overflow: hidden; position: relative; }
 
 .sidebar {
     width: var(--sidebar-w); flex: 0 0 auto; display: flex; flex-direction: column;
@@ -85,7 +96,7 @@ body { overflow: hidden; }
 .workspace { display: flex; flex: 1; min-width: 0; min-height: 0; }
 /* A flex column so full-height views (the chart split) can fill the panel while
    content views (dashboard, tables) stay content-height and scroll. */
-.center-col { flex: 1; min-width: 0; overflow-y: auto; overflow-x: hidden; background: var(--bg-base); display: flex; flex-direction: column; }
+.center-col { flex: 1; min-width: 0; overflow-y: auto; overflow-x: auto; background: var(--bg-base); display: flex; flex-direction: column; }
 .center-col > * { flex: 0 0 auto; }
 .right-col {
     width: var(--right-w); flex: 0 0 auto; display: flex; flex-direction: column;
@@ -146,7 +157,12 @@ body { overflow: hidden; }
 .dock-head {
     display: flex; align-items: center; gap: 2px; padding: 0 10px; height: 34px;
     border-bottom: 1px solid var(--border); flex: 0 0 auto;
+    /* tab strip scrolls sideways on narrow screens instead of overflowing */
+    overflow-x: auto; overflow-y: hidden;
+    scrollbar-width: none; -ms-overflow-style: none;
 }
+.dock-head::-webkit-scrollbar { display: none; height: 0; }
+.dock-head > .dock-tab, .dock-head > .dock-actions { flex: 0 0 auto; }
 .dock-tab {
     padding: 6px 10px; font-size: 11px; font-weight: 600; cursor: pointer;
     color: var(--text-muted); border-radius: var(--radius-sm); white-space: nowrap;
@@ -213,7 +229,10 @@ body { overflow: hidden; }
 
 /* ---------- widget grid (dashboard) ---------- */
 .widget-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    /* min(340px, 100%) keeps a single track from ever demanding more width
+       than the panel has — the old hard 340px floor multiplied by auto-fill
+       is what expanded the dashboard to ~2300px on phones. */
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
     gap: 12px; padding: 14px; align-items: start;
 }
 .widget {
@@ -267,7 +286,8 @@ body { overflow: hidden; }
 .scroll-x { overflow-x: auto; }
 
 @media (max-width: 1200px) {
-    .sidebar { width: 0; border-right: none; }
+    /* Sidebar stays toggleable (☰) at every width — it is collapsed by JS
+       on load instead of being force-zeroed here, so the handle works. */
     .right-col { width: 300px; }
     .split-side { width: 280px; }
 }
@@ -275,4 +295,49 @@ body { overflow: hidden; }
     .right-col { display: none; }
     .split { flex-direction: column; }
     .split-side { width: auto; border-left: none; border-top: 1px solid var(--border); }
+}
+
+/* ==========================================================================
+   PHONE / SMALL-TABLET SHELL (≤900px)
+   The sidebar becomes an overlay drawer, the dock gets a shorter default,
+   and heavy GPU effects are dropped so low-end phones stay at 60fps.
+   ========================================================================== */
+@media (max-width: 900px) {
+    :root { --dock-h: 150px; }
+
+    .sidebar {
+        position: absolute; top: 0; left: 0; bottom: 0; z-index: 70;
+        width: min(78vw, 300px);
+        border-right: 1px solid var(--border);
+        transform: translateX(-102%);
+        transition: transform .22s ease;
+        box-shadow: 12px 0 32px rgba(0, 0, 0, .5);
+    }
+    .sidebar:not(.collapsed) { transform: translateX(0); }
+    .sidebar.collapsed { width: min(78vw, 300px); border-right: 1px solid var(--border); }
+    .resizer { display: none; }
+
+    /* perf: backdrop blur is the single most expensive effect on phones */
+    .widget, .dock { backdrop-filter: none; }
+    .gauge-ring { animation: none; }
+
+    /* comfortable tap targets */
+    .nav-btn { padding: 10px 13px; }
+    .dock-tab { padding: 10px 12px; }
+    .tabstrip .tab { padding: 10px 12px; }
+}
+
+/* Compact top bar (≤768px): search shrinks, chrome drops away */
+@media (max-width: 768px) {
+    .topbar { gap: 8px; padding: 0 10px; }
+    .topbar .search-box { flex: 1 1 auto; min-width: 0; max-width: none; }
+    .topbar .kbd { display: none; }
+    .topbar .status-pill { display: none; } /* connection state lives in the bottom status strip */
+    .profile-chip span:not(:first-child) { display: none; }
+    .logo { font-size: 14px; }
+    /* auto-fill + min(340px,100%) already yields 2 cols on small tablets and
+       1 col on phones; span-2 must map to 1/-1 so it never creates an
+       implicit second column when only one fits. */
+    .widget-grid { gap: 10px; padding: 10px; }
+    .widget.span-2 { grid-column: 1 / -1; }
 }
